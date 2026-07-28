@@ -1,10 +1,13 @@
 [workspace]
 resolver = "2"
-members = []
+members = ["crates/cadw-contract", "crates/cadw-governance"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.0.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/tacticaldoll/cadw"
+publish = false
 
 [workspace.dependencies]
+tianheng = "0.3.0"

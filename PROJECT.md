@@ -1,51 +1,102 @@
-# Project Contract
+# Project Contract — Cadw
 
-Fill this file in during the first project-specific OpenSpec change. Keep it
-short and concrete; it is the orientation layer for humans and AI agents.
+## Status
+
+**Tier 2 — controlled prototype** (per a private family-level roadmap). Sans-I/O pure core.
+Experimental. Not wired into any consumer. Not published to crates.io. Vacuum-unit-tested to
+learn the shape; graduation to Tier 1 (a real bridge consumer, a public crates.io release) is a
+separate, later decision this repository does not assume.
 
 ## Purpose
 
-Describe what this project is for in one or two paragraphs.
+Cadw ("keep, retain, preserve" — Welsh) is a thin kernel for folding a batch of declared
+`Close`/`Reopen` moves over addressable targets atomically: every move in a batch applies, or
+none do. Conservative retention — a target no move mentions is untouched — is a structural
+property of the data model, not a checked invariant: there is no code path through which an
+unmentioned target could be silently dropped.
+
+The kernel owns the fold/atomicity/conflict/state-transition mechanism only. It never judges
+whether a specific `Outcome` is semantically valid — that is the domain-supplied `Validator` port,
+whose `Rejection` associated type is a fully structured `std::error::Error`, mirroring
+`pacta-contract::Registry`'s `type Error` pattern.
 
 ## Core Contract
 
-Name the behavior that must be protected first. Examples:
+The behavior that must be protected at all costs:
 
-- a data lifecycle that must never lose or duplicate information
-- a protocol compatibility promise
-- a user-facing workflow that must remain coherent
-- a security or privacy invariant
+- **Atomic batch fold.** `Ledger::fold_batch` applies every move in a batch or none of them.
+  Never a partial subset, regardless of how many moves precede the one that fails.
+- **Structural conservative retention.** A target absent from a batch is unreachable by that
+  batch's fold. This is enforced by the data model (no code path can touch an unaddressed
+  target), not by a check that could be forgotten.
+- **Domain validation is a port, never free-text.** `Validator::Rejection: std::error::Error` is
+  the domain's own closed, structured type. No `String` ever crosses the boundary between the
+  kernel's rejection vocabulary and the domain's own.
+- **No time dimension.** No lease, no expiry, no crash-recovery concern. A batch fold is
+  synchronous and in-memory, assumed to run entirely within an already-claimed unit of work a
+  consumer has durably claimed through its own mechanism (e.g. `pacta`, composed outside this
+  crate). Cadw does not compete with `pacta`'s scope — it has none of pacta's reasons to exist.
+- **Governance with teeth.** `cadw-governance` (tianheng) enforces the boundaries this document
+  claims, executably — see `crates/cadw-governance/README.md`.
 
 ## Terminology
 
-Define project-specific terms here. Prefer one canonical term over synonyms.
+- **Target** (`TargetId`): an opaque, domain-supplied identity for one addressable thing that can
+  be `Open` or `Closed`. The kernel never interprets its content.
+- **State**: `Open` or `Closed(Outcome)`. `Outcome` is domain-opaque.
+- **Move**: a single declared operation — `Close` (with an outcome) or `Reopen` — addressing one
+  target.
+- **Validator**: the domain-supplied port judging whether a specific `Close`'s outcome is
+  semantically acceptable.
+- **Rejection**: why a batch was rejected — either a structural rule (`UnknownTarget`,
+  `AlreadyClosed`, `NotClosed`, `DuplicateTargetInBatch`) or the domain's own
+  (`Invalid(TargetId, Validator::Rejection)`).
+- **Ledger**: the set of targets and their current states.
+
+## Non-Goals
+
+Cadw core is not:
+
+- an event-sourcing framework
+- a CRDT or general diff/patch engine
+- a target-creation or target-discovery mechanism (targets are domain-supplied, already
+  populated, before a batch runs)
+- a place that knows what "reason" or "provenance" mean, or any other domain vocabulary — that
+  belongs to whichever domain adopts this
+- a decision about how many times a consumer invokes anything per unit of work, or how batches
+  are assembled — entirely the consumer's strategy
+- a durable or persistence mechanism of any kind
+
+## Lineage
+
+```
+             tianheng  +  〔sans-I/O · OpenSpec · vocab-as-governance · least-commitment〕
+                              │  (inherited discipline — provenance)
+                              ▼
+                      ●  Cadw (Tier 2)
+
+   siblings: ▢ ▢ ▢  ← deliberately blank (sibling-blind)
+   footnote: workspace shape and governance-first sequencing observed from the pacta reference
+             implementation (dual MIT/Apache license, Cargo.toml conventions, associated-type
+             Validator port mirroring `pacta-contract::Registry`'s `type Error`, and a
+             tianheng-governed workspace built before feature work, not after); no code or crate
+             dependency on pacta — core ⟂ core.
+```
 
 ## First Project Change
 
-Start each derived project with an OpenSpec change named
-`initial-project-shape` unless a more specific first change is clearer.
-
-That change should:
-
-- replace placeholder project metadata
-- define the first project-specific specs
-- choose the crate layout
-- add the real Rust crate or crates
-- make the Rust Definition of Done runnable from the workspace root
-
-Before the first real crate exists, Rust build, test, lint, and format commands
-are not yet a meaningful Definition of Done. The first project-specific change
-is responsible for making them meaningful.
+This repository's first change, `initial-project-shape`, replaced this file's placeholders,
+chose the two-crate workspace layout (`cadw-contract`, `cadw-governance`), ported the proven
+mechanism and its vacuum tests, and built `cadw-governance` first per explicit direction rather
+than as an afterthought.
 
 ## Change Prioritization
 
-When comparing possible changes, prefer the one that protects the core contract
-earliest:
+When comparing possible changes, prefer the one that protects the Core Contract earliest:
 
-1. Correctness, data integrity, lifecycle safety, and security foundations.
+1. Correctness of the fold/atomicity/conflict/state-transition mechanism, and the governance
+   that keeps it from drifting.
 2. Specified feature completeness for concepts already declared in OpenSpec.
-3. Operator and developer ergonomics.
-4. Scale-out, integrations, and optional platform features.
-
-Do not add scale-out or integration scope merely because a correctness change
-enables it. Keep enabling contract changes separate and small.
+3. Operator and developer ergonomics (docs, examples).
+4. Graduation decisions (a real consumer, a public release) — never pursued merely because a
+   correctness or governance change makes them easier.

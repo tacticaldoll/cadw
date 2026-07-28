@@ -10,7 +10,6 @@ agent-agnostic.
 
 - `openspec/specs/` - the living specification of what the system currently is.
 - `openspec/changes/` - active change proposals as delta specs.
-- `openspec/changes/archive/` - completed changes.
 
 Per-agent command files such as `.codex/`, `.claude/`, and editor-specific shims
 are per-clone generated files and are not committed. After cloning, generate
@@ -26,7 +25,7 @@ openspec init --tools codex
 Follow this lifecycle:
 
 ```text
-explore -> propose -> apply -> sync -> archive
+explore -> propose -> apply -> sync
 ```
 
 1. **Explore**: think and investigate only. Do not write feature code outside of
@@ -35,9 +34,11 @@ explore -> propose -> apply -> sync -> archive
    delta specs.
 3. **Apply**: implement tasks one at a time, checking each off in `tasks.md`
    only after verification.
-4. **Sync**: merge verified delta specs back into `openspec/specs/`.
-5. **Archive**: move the completed change to
-   `openspec/changes/archive/YYYY-MM-DD-<name>/`.
+4. **Sync**: merge verified delta specs into `openspec/specs/` (agent-driven),
+   then remove the completed change directory. There is **no**
+   `openspec/changes/archive/` **folder** — archive means deletion; git history
+   (and the merged pull request) keeps the deliberation. Do not run
+   `openspec archive`.
 
 ## OpenSpec CLI
 
@@ -48,7 +49,6 @@ openspec list [--json] [--specs]
 openspec new change "<name>"
 openspec status --change "<name>" --json
 openspec instructions <artifact> --change "<name>"
-openspec archive <name>
 ```
 
 ## Rules
@@ -67,41 +67,62 @@ openspec archive <name>
 - Write OpenSpec artifacts, ADRs, code comments, and commit messages in English.
 - Converse with users in the language they use.
 
-## Commits
+## Commit And Integration Governance
 
-Use Conventional Commits:
+### Branch Commits
 
-```text
-type(scope): summary
-```
+- Use Conventional Commits: `type(scope): summary`.
+- Write the subject in English, lowercase imperative mood, at no more than 72
+  characters.
+- Use the body to record motivation, important decisions, constraints, and
+  verification when that context exists.
+- Do not append pull request or issue numbers to the subject or body.
+- Development branches may contain multiple coherent commits because the pull
+  request is squash-merged.
 
-Use lowercase imperative mood and keep the summary at 72 characters or fewer.
-Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `build`,
-`ci`.
+### Pull Requests
 
-### Commit Flow
+- Branch from `main` and open every change directly against `main`.
+- Make the pull request title the intended squash commit subject.
+- Give every pull request a non-empty body that explains why the change is
+  needed, what changed, consequential decisions or tradeoffs, and
+  verification.
+- Rebase the branch onto the current `main` before final verification.
+- Do not introduce a release integration branch between a change and `main`.
 
-- **Propose**: `docs(<change>): propose <summary>`
-- **Apply**: `feat(<change>): <summary>` or `fix(<change>): <summary>`
-- **Sync**: `docs(specs): sync <change>`
-- **Archive**: `chore(openspec): archive <change>`
+### Squash Merges
 
-Never bundle unrelated changes into one commit.
+- Squash-merge every verified pull request into `main`.
+- Make the squash commit subject exactly the approved pull request title.
+- Give every squash commit a non-empty body distilled from the approved pull
+  request body.
+- Do not append a pull request number, issue number, or URL to the squash
+  subject or body.
+- Every content-changing commit on `main` must come from a squash-merged pull
+  request.
+- Keep `main` releasable after every merge.
+
+### Attribution
+
+- Do not include AI, agent, model, tool, automation, or generation attribution
+  in commits, pull requests, tags, changelogs, or release notes.
+- A `Co-authored-by` trailer is allowed only for a real human contributor.
 
 ## Definition Of Done
 
 Run these from the workspace root before checking off a task, syncing specs, or
-archiving a change:
+merging a change:
 
 ```bash
-cargo build
-cargo test
-cargo clippy --all-targets -- -D warnings
+cargo build --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all --check
+cargo run -p cadw-governance -- check --manifest-path Cargo.toml
 ```
 
-Before the first real crate exists, these Rust commands are not yet meaningful.
-The first project-specific OpenSpec change should add the real crate layout and
-make the Definition of Done runnable from the workspace root.
+The last line is the executable architectural governance gate (tianheng). It
+enforces `PROJECT.md`'s Core Contract boundaries — do not treat it as optional
+or as a slower duplicate of clippy.
 
 If a command cannot run in the current environment, report that explicitly.

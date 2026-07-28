@@ -1,45 +1,41 @@
-# rust-openspec-starter
+# Cadw
 
-An opinionated starter for Rust projects that use OpenSpec, ADRs, conventional
-commits, and AI-agent-friendly governance from day one.
+**Tier 2 experimental spike — not published to crates.io, not wired into any consumer.** See
+`PROJECT.md`.
 
-This repository is intentionally small. It provides the process skeleton for a
-new project, not product-specific architecture.
+Cadw ("keep, retain, preserve" — Welsh) is a sans-I/O kernel for atomically folding a batch of
+individually-validated `Close`/`Reopen` operations over addressable targets, with conservative
+retention as a structural property of the data model rather than a checked invariant.
 
-## Use
+Born from a design discussion while hardening `ringi`'s deliberation loop: an arbitrator authoring
+an entire successor document each turn (whole-document echo) kept giving two real bugs new places
+to hide — an immutable field silently drifting, and a domain-rejected response still settling as
+"succeeded." Two of this crate's vacuum tests are direct translations of those two bugs.
 
-1. Create a new repository from this starter.
-2. Replace placeholder project metadata in `PROJECT.md`, `README.md`, and
-   `Cargo.toml`.
-3. Install or expose the OpenSpec CLI in your shell.
-4. Generate local agent shims for your editor or agent:
+Whether this graduates into a real, adopted family member (in the style of `pacta`/`suunta`/
+`shaahid`) is an open question this spike exists to help answer — not an assumption it starts
+from.
 
-   ```bash
-   openspec init --tools codex
-   # or: openspec init --tools claude,cursor,github-copilot
-   ```
+## Workspace
 
-5. Start the first project-specific change with OpenSpec:
+- `crates/cadw-contract` — the kernel: `TargetId`, `State`, `Move`, `Validator`, `Rejection`,
+  `Ledger::fold_batch`.
+- `crates/cadw-governance` — executable architectural governance (tianheng), built first per
+  explicit direction. Run it with:
 
-   ```bash
-   openspec new change "initial-project-shape"
-   ```
+  ```bash
+  cargo run -p cadw-governance -- check --manifest-path Cargo.toml
+  ```
 
-   This change should replace placeholders, choose the real crate layout, add
-   the first specs, and make the Rust Definition of Done runnable.
+## Definition of Done
 
-## Included
-
-- `AGENTS.md` - repository rules for AI coding agents and humans.
-- `PROJECT.md` - project-specific contract, terminology, and priorities.
-- `docs/development-flow.md` - short OpenSpec and commit checklist.
-- `docs/adr/` - architecture decision record skeleton.
-- `openspec/` - empty OpenSpec structure ready for specs and changes.
-- A Rust workspace policy anchor in `Cargo.toml`. It intentionally has no
-  crates until the first project-specific change chooses the real layout.
-
-Generated agent shims such as `.codex/` and `.claude/` are per-clone local
-files and should not be committed.
+```bash
+cargo build --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+cargo fmt --all --check
+cargo run -p cadw-governance -- check --manifest-path Cargo.toml
+```
 
 ## License
 
