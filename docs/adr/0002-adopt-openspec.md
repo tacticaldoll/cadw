@@ -15,7 +15,9 @@ the system contract.
 Use OpenSpec as the source of truth for requirements and change proposals.
 
 Project behavior lives in `openspec/specs/`. Proposed behavior changes live in
-`openspec/changes/` until they are implemented, verified, synced, and archived.
+`openspec/changes/` until they are implemented, verified, and synced — at which
+point the change directory is removed. See `docs/adr/0003` for why this
+repository deletes rather than archives a synced change.
 
 ## Consequences
 
