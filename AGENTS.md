@@ -118,11 +118,15 @@ cargo build --workspace
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all --check
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+cargo deny check
 cargo run -p cadw-governance -- check --manifest-path Cargo.toml
 ```
 
 The last line is the executable architectural governance gate (tianheng). It
 enforces `PROJECT.md`'s Core Contract boundaries — do not treat it as optional
-or as a slower duplicate of clippy.
+or as a slower duplicate of clippy. `cargo deny check` enforces `deny.toml`'s
+license/advisory/bans/sources policy over the resolved dependency graph. CI
+(`.github/workflows/ci.yml`) runs all of this on every push and pull request.
 
 If a command cannot run in the current environment, report that explicitly.

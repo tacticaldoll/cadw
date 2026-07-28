@@ -49,5 +49,7 @@ cargo build --workspace
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all --check
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+cargo deny check
 cargo run -p cadw-governance -- check --manifest-path Cargo.toml
 ```
