@@ -70,7 +70,8 @@ unchanged by a checked rule, but structurally unaddressable.
 
 `Validator::Rejection` SHALL be a type implementing `std::error::Error`, supplied by the domain
 adopting this crate — never a `String` on any path from the kernel's `Rejection` type through to
-domain-supplied content.
+domain-supplied content. The port SHALL compose with a realistic, multi-field domain outcome type
+(not only a trivial single-field one) and a closed, multi-variant domain rejection enum.
 
 #### Scenario: A structurally valid move can still be rejected by the domain's validator
 
@@ -78,6 +79,14 @@ domain-supplied content.
   `Validator::validate` returns an `Err`
 - **THEN** `fold_batch` returns `Rejection::Invalid` wrapping the domain's own structured
   rejection value, and the batch does not apply
+
+#### Scenario: The Validator port composes with a realistic, multi-field domain outcome
+
+- **WHEN** a domain's `Outcome` carries multiple required fields (e.g. a reason and a list of
+  provenance references, each independently validated) and its `Validator::Rejection` is a
+  closed, multi-variant enum naming which field failed
+- **THEN** `fold_batch` still rejects the whole batch atomically on the first invalid move, and an
+  individually-valid move elsewhere in the same batch still does not apply
 
 ### Requirement: Unknown targets are rejected
 

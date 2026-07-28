@@ -4,7 +4,7 @@
 `PROJECT.md`.
 
 Cadw ("keep, retain, preserve" — Welsh) is a sans-I/O kernel for atomically folding a batch of
-individually-validated `Close`/`Reopen` operations over addressable targets, with conservative
+individually-validated `Close`/`Reopen` moves over addressable targets, with conservative
 retention as a structural property of the data model rather than a checked invariant.
 
 Born from a design discussion while hardening `ringi`'s deliberation loop: an arbitrator authoring
