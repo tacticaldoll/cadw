@@ -15,7 +15,7 @@ const GOVERNANCE_REASON: &str = "the governance gate must stay independent of th
 const CORE_NO_IO_REASON: &str = "the sans-I/O core contract performs no I/O: no code in cadw-contract may call into std::io/fs/net/process; a batch fold is a synchronous, in-memory operation, never a place I/O could hide.";
 const NO_SERDE_REASON: &str = "cadw-contract is transient in-memory mechanism, not a durable record type: it must not acquire Serialize/Deserialize anywhere. Serialization of a domain's Outcome is that domain's own concern, never this crate's.";
 
-const ACTIVE_PROSE_FILES: &[&str] = &["AGENTS.md", "PROJECT.md", "README.md"];
+const ACTIVE_PROSE_FILES: &[&str] = &["AGENTS.md", "PROJECT.md", "README.md", "BACKLOG.md"];
 
 const STALE_PHRASES: &[StalePhrase] = &[
     StalePhrase {

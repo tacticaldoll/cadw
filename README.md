@@ -1,7 +1,7 @@
 # Cadw
 
 **Tier 2 experimental spike — not published to crates.io, not wired into any consumer.** See
-`PROJECT.md`.
+`PROJECT.md` for the Core Contract and `BACKLOG.md` for settled decisions and their reasons.
 
 Cadw ("keep, retain, preserve" — Welsh) is a sans-I/O kernel for atomically folding a batch of
 individually-validated `Close`/`Reopen` moves over addressable targets, with conservative
