@@ -7,6 +7,31 @@ Experimental. Not wired into any consumer. Not published to crates.io. Vacuum-un
 learn the shape; graduation to Tier 1 (a real bridge consumer, a public crates.io release) is a
 separate, later decision this repository does not assume.
 
+## Graduation
+
+The contract freeze, adversarial testing, tianheng gate, non-toy consumer example, and
+domain-language review are all done — `cadw-contract`'s shape is as proven as it can be in
+isolation. What remains is not more work on the crate; it is a decision, and the decision has a
+concrete trigger, not an open-ended "later":
+
+**Trigger**: `ringi` — the project whose arbitrator-authors-a-whole-document tension is what this
+crate grew out of — or another real consumer, actually decides to pursue structured move/
+operation authorship for its own domain, replacing whole-document echo with discrete, validated
+operations. That decision belongs to the consumer, not to Cadw: this repository does not propose
+adoption to `ringi`, or to anyone. If and when such a decision is recorded in that project's own
+governance, re-run a real assessment of whether `cadw-contract`'s shape actually fits — do not
+assume adoption follows automatically from the trigger firing.
+
+**Not a trigger**: growing `cadw-contract`'s generality — a new `Move` variant, a new `Rejection`
+kind, a `cadw-conformance` crate for a hypothetical second implementation — in anticipation of a
+consumer that has not actually materialized. `AGENTS.md`'s "don't design for hypothetical future
+requirements" applies to this crate's own lifecycle milestone exactly as it applies to its code.
+
+**An ungraduated Cadw is a legitimate permanent state.** If the trigger never fires, that is not a
+stalled or failed project — it is a Tier 2 spike that answered its own question (is this
+mechanism worth proving) and never found a real consumer, exactly what least-commitment is for.
+No sunset clause, no forced timeline.
+
 ## Purpose
 
 Cadw ("keep, retain, preserve" — Welsh) is a thin kernel for folding a batch of declared
