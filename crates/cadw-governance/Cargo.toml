@@ -1,0 +1,12 @@
+[package]
+name = "cadw-governance"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "Executable architectural governance for the Cadw workspace (tianheng constitution)."
+publish.workspace = true
+
+[dependencies]
+tianheng.workspace = true

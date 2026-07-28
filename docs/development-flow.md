@@ -12,23 +12,27 @@ authoritative contributor and agent guide; this file is a short checklist.
 2. Propose the change:
    - `openspec new change "<change-name>"`
    - write `proposal.md`, `design.md`, `tasks.md`, and delta specs
-   - commit as `docs(<change-name>): propose <summary>`
 3. Apply the change:
    - implement against `openspec/changes/<change-name>/specs/`
    - check off tasks only after code and tests pass
-   - commit coherent compiling milestones as `feat(...)` or `fix(...)`
 4. Sync verified semantics:
    - promote verified delta specs into `openspec/specs/`
-   - commit as `docs(specs): sync <change-name>`
-5. Archive the completed change:
-   - `openspec archive <change-name>`
-   - commit as `chore(openspec): archive <change-name>`
+   - remove the completed change directory — there is no
+     `openspec/changes/archive/` folder; archive means deletion, and the
+     merged pull request keeps the deliberation. Do not run
+     `openspec archive`.
+5. Open a pull request against `main` for the whole change (branch commits can
+   be as granular as you like; the pull request is squash-merged, so only its
+   title and body need to read as the final record).
 
 ## Commit Granularity
 
-Apply commits should be larger than individual task checkboxes and smaller than
-an entire risky feature. Prefer one commit per coherent milestone that builds,
-tests, and preserves the spec contract.
+Development-branch commits should be larger than individual task checkboxes
+and smaller than an entire risky feature. Prefer one commit per coherent
+milestone that builds, tests, and preserves the spec contract — they get
+squashed on merge, so precision there matters less than at the pull request
+itself. See `AGENTS.md`'s Commit And Integration Governance for the pull
+request and squash-merge rules.
 
 Avoid:
 
@@ -41,8 +45,9 @@ Avoid:
 Run these from the workspace root:
 
 ```bash
-cargo build
-cargo test
-cargo clippy --all-targets -- -D warnings
+cargo build --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all --check
+cargo run -p cadw-governance -- check --manifest-path Cargo.toml
 ```
