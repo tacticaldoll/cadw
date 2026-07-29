@@ -2,11 +2,11 @@
 
 ## Purpose
 
-A sans-I/O kernel for folding a batch of declared `Close`/`Reopen` moves over addressable targets
-atomically — every move in a batch applies, or none do — with structural conservative retention:
-a target no move mentions is unreachable by that fold, not merely left unchanged by a checked
-rule. The kernel owns the fold/atomicity/conflict/state-transition mechanism only; it never
-judges whether a specific `Outcome` is semantically valid — that is the domain-supplied
+A sans-I/O kernel for folding a batch of declared `Create`/`Close`/`Reopen` moves over addressable
+targets atomically — every move in a batch applies, or none do — with structural conservative
+retention: a target no move mentions is unreachable by that fold, not merely left unchanged by a
+checked rule. The kernel owns the fold/atomicity/conflict/state-transition mechanism only; it
+never judges whether a specific `Outcome` is semantically valid — that is the domain-supplied
 `Validator` port.
 
 ## Requirements
@@ -105,3 +105,41 @@ domain-supplied content. The port SHALL compose with a realistic, multi-field do
 
 - **WHEN** `fold_batch` is called with an empty slice of moves
 - **THEN** it returns `Ok` with a `Ledger` whose every target's state matches the input exactly
+
+### Requirement: Create brings a new target into existence, Open, with no payload
+
+A `Move::Create` SHALL succeed only if its target does not already exist in the `Ledger`, and
+SHALL insert it as `Open` with no stored content — the kernel never stores anything for an `Open`
+target, matching its existing content-blindness for `Closed(Outcome)`. A `Create` addressing a
+target already present in the `Ledger` SHALL be rejected as `Rejection::AlreadyExists`.
+
+#### Scenario: Creating a fresh target succeeds
+
+- **WHEN** a batch declares `Create` for a `TargetId` absent from the `Ledger`
+- **THEN** the resulting `Ledger` contains that target in the `Open` state
+
+#### Scenario: Creating an already-existing target is rejected
+
+- **WHEN** a batch declares `Create` for a `TargetId` already present in the `Ledger` (`Open` or
+  `Closed`)
+- **THEN** `fold_batch` returns `Rejection::AlreadyExists` for that target, and the batch does not
+  apply
+
+#### Scenario: A created target can be closed in a later batch
+
+- **WHEN** a target is created by one batch's `fold_batch` call, and a later, separate batch
+  declares `Close` for that same target
+- **THEN** the later `Close` succeeds exactly as it would for any other `Open` target
+
+### Requirement: A batch cannot create and act on the same target in one call
+
+The existing duplicate-target-in-batch rule SHALL apply to `Create` exactly as it does to
+`Close`/`Reopen`: a batch addressing the same `TargetId` with `Create` and any other move
+(including another `Create`) SHALL be rejected as `Rejection::DuplicateTargetInBatch`, before any
+move in the batch is evaluated for validity.
+
+#### Scenario: Creating and closing the same target in one batch is rejected
+
+- **WHEN** a single batch declares both `Create` and `Close` for the same `TargetId`
+- **THEN** `fold_batch` returns `Rejection::DuplicateTargetInBatch` for that target, and no move in
+  the batch applies

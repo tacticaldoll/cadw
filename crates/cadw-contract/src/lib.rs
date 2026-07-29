@@ -1,7 +1,7 @@
-//! A sans-I/O kernel for folding a batch of declared `Close`/`Reopen` [`Move`]s over addressable
-//! [`Target`](TargetId)s atomically — every move in a batch applies, or none do — with structural
-//! conservative retention: a target no move mentions is unreachable by that fold, not merely left
-//! unchanged by a checked rule.
+//! A sans-I/O kernel for folding a batch of declared `Create`/`Close`/`Reopen` [`Move`]s over
+//! addressable [`Target`](TargetId)s atomically — every move in a batch applies, or none do —
+//! with structural conservative retention: a target no move mentions is unreachable by that fold,
+//! not merely left unchanged by a checked rule.
 //!
 //! The kernel owns the fold/atomicity/conflict/state-transition mechanism. It never judges
 //! whether a specific `Outcome` is semantically valid — that is the domain-supplied [`Validator`]
@@ -53,6 +53,14 @@ pub enum State<Outcome> {
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub enum Move<Outcome> {
+    /// Bring a new target into existence, `Open`, with no prior state. Carries no payload: the
+    /// kernel never stores anything for an `Open` target (only `Closed` carries an `Outcome`),
+    /// so it has nothing to accept here either — a target's descriptive content, if any, is the
+    /// domain's own concern, correlated by the same `TargetId`.
+    Create {
+        /// The target this move addresses.
+        target: TargetId,
+    },
     /// Close an `Open` target with a domain-supplied outcome.
     Close {
         /// The target this move addresses.
@@ -72,6 +80,7 @@ impl<Outcome> Move<Outcome> {
     /// The target this move addresses, regardless of variant.
     pub fn target(&self) -> &TargetId {
         match self {
+            Move::Create { target } => target,
             Move::Close { target, .. } => target,
             Move::Reopen { target } => target,
         }
@@ -95,6 +104,8 @@ pub trait Validator<Outcome> {
 pub enum Rejection<VR: std::error::Error> {
     /// A move addressed a target the ledger does not contain.
     UnknownTarget(TargetId),
+    /// A `Create` addressed a target that already exists in the ledger, `Open` or `Closed`.
+    AlreadyExists(TargetId),
     /// A `Close` addressed a target that was already `Closed`.
     AlreadyClosed(TargetId),
     /// A `Reopen` addressed a target that was not `Closed`.
@@ -109,6 +120,7 @@ impl<VR: std::error::Error> fmt::Display for Rejection<VR> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Rejection::UnknownTarget(t) => write!(f, "unknown target: {t}"),
+            Rejection::AlreadyExists(t) => write!(f, "target already exists: {t}"),
             Rejection::AlreadyClosed(t) => write!(f, "target already closed: {t}"),
             Rejection::NotClosed(t) => write!(f, "target not closed, cannot reopen: {t}"),
             Rejection::DuplicateTargetInBatch(t) => {
@@ -150,10 +162,11 @@ impl<Outcome> Ledger<Outcome> {
 
     /// Fold a batch of moves atomically: every move applies, or none do.
     ///
-    /// Order of checks: (1) no two moves in the batch address the same target; (2) every move's
-    /// target exists and its current state permits the requested transition; (3) every `Close`
-    /// passes the domain's [`Validator`]. Only if all three pass for the whole batch is a new
-    /// `Ledger` produced with every move applied.
+    /// Order of checks: (1) no two moves in the batch address the same target; (2) a `Create`'s
+    /// target must not already exist, and a `Close`/`Reopen`'s target must exist and its current
+    /// state must permit the requested transition; (3) every `Close` passes the domain's
+    /// [`Validator`]. Only if all three pass for the whole batch is a new `Ledger` produced with
+    /// every move applied.
     pub fn fold_batch<V>(
         &self,
         moves: &[Move<Outcome>],
@@ -172,22 +185,39 @@ impl<Outcome> Ledger<Outcome> {
 
         for mv in moves {
             let target = mv.target();
-            let current = self
-                .targets
-                .get(target)
-                .ok_or_else(|| Rejection::UnknownTarget(target.clone()))?;
-            match (mv, current) {
-                (Move::Close { outcome, .. }, State::Open) => {
-                    validator
-                        .validate(target, outcome)
-                        .map_err(|e| Rejection::Invalid(target.clone(), e))?;
+            match mv {
+                Move::Create { .. } => {
+                    if self.targets.contains_key(target) {
+                        return Err(Rejection::AlreadyExists(target.clone()));
+                    }
                 }
-                (Move::Close { .. }, State::Closed(_)) => {
-                    return Err(Rejection::AlreadyClosed(target.clone()));
+                Move::Close { outcome, .. } => {
+                    match self
+                        .targets
+                        .get(target)
+                        .ok_or_else(|| Rejection::UnknownTarget(target.clone()))?
+                    {
+                        State::Open => {
+                            validator
+                                .validate(target, outcome)
+                                .map_err(|e| Rejection::Invalid(target.clone(), e))?;
+                        }
+                        State::Closed(_) => {
+                            return Err(Rejection::AlreadyClosed(target.clone()));
+                        }
+                    }
                 }
-                (Move::Reopen { .. }, State::Closed(_)) => {}
-                (Move::Reopen { .. }, State::Open) => {
-                    return Err(Rejection::NotClosed(target.clone()));
+                Move::Reopen { .. } => {
+                    match self
+                        .targets
+                        .get(target)
+                        .ok_or_else(|| Rejection::UnknownTarget(target.clone()))?
+                    {
+                        State::Closed(_) => {}
+                        State::Open => {
+                            return Err(Rejection::NotClosed(target.clone()));
+                        }
+                    }
                 }
             }
         }
@@ -195,6 +225,9 @@ impl<Outcome> Ledger<Outcome> {
         let mut new_targets = self.targets.clone();
         for mv in moves {
             match mv {
+                Move::Create { target } => {
+                    new_targets.insert(target.clone(), State::Open);
+                }
                 Move::Close { target, outcome } => {
                     new_targets.insert(target.clone(), State::Closed(outcome.clone()));
                 }
@@ -434,6 +467,127 @@ mod tests {
         let next = ledger.fold_batch(&[], &AlwaysValid).unwrap();
         assert_eq!(next.state_of(&target("a")), Some(&State::Open));
         assert_eq!(next.state_of(&target("b")), Some(&State::Open));
+    }
+
+    #[test]
+    fn creating_a_fresh_target_succeeds() {
+        let ledger: Ledger<String> = Ledger::new([]);
+        let next = ledger
+            .fold_batch(
+                &[Move::Create {
+                    target: target("a"),
+                }],
+                &AlwaysValid,
+            )
+            .unwrap();
+        assert_eq!(next.state_of(&target("a")), Some(&State::Open));
+    }
+
+    #[test]
+    fn creating_an_already_open_target_is_rejected() {
+        let ledger: Ledger<String> = Ledger::new([target("a")]);
+        let err = ledger
+            .fold_batch(
+                &[Move::Create {
+                    target: target("a"),
+                }],
+                &AlwaysValid,
+            )
+            .unwrap_err();
+        assert!(matches!(err, Rejection::AlreadyExists(t) if t == target("a")));
+    }
+
+    #[test]
+    fn creating_an_already_closed_target_is_rejected() {
+        let ledger = Ledger::new([target("a")]);
+        let closed = ledger
+            .fold_batch(
+                &[Move::Close {
+                    target: target("a"),
+                    outcome: "x".into(),
+                }],
+                &AlwaysValid,
+            )
+            .unwrap();
+        let err = closed
+            .fold_batch(
+                &[Move::Create {
+                    target: target("a"),
+                }],
+                &AlwaysValid,
+            )
+            .unwrap_err();
+        assert!(matches!(err, Rejection::AlreadyExists(t) if t == target("a")));
+    }
+
+    #[test]
+    fn a_created_target_can_be_closed_in_a_later_batch() {
+        let ledger: Ledger<String> = Ledger::new([]);
+        let created = ledger
+            .fold_batch(
+                &[Move::Create {
+                    target: target("a"),
+                }],
+                &AlwaysValid,
+            )
+            .unwrap();
+        let closed = created
+            .fold_batch(
+                &[Move::Close {
+                    target: target("a"),
+                    outcome: "done".into(),
+                }],
+                &AlwaysValid,
+            )
+            .unwrap();
+        assert_eq!(
+            closed.state_of(&target("a")),
+            Some(&State::Closed("done".to_string()))
+        );
+    }
+
+    #[test]
+    fn a_batch_mixing_create_and_close_on_different_targets_applies_atomically() {
+        let ledger = Ledger::new([target("existing")]);
+        let next = ledger
+            .fold_batch(
+                &[
+                    Move::Create {
+                        target: target("new"),
+                    },
+                    Move::Close {
+                        target: target("existing"),
+                        outcome: "done".into(),
+                    },
+                ],
+                &AlwaysValid,
+            )
+            .unwrap();
+        assert_eq!(next.state_of(&target("new")), Some(&State::Open));
+        assert_eq!(
+            next.state_of(&target("existing")),
+            Some(&State::Closed("done".to_string()))
+        );
+    }
+
+    #[test]
+    fn creating_and_closing_the_same_target_in_one_batch_is_rejected() {
+        let ledger: Ledger<String> = Ledger::new([]);
+        let err = ledger
+            .fold_batch(
+                &[
+                    Move::Create {
+                        target: target("a"),
+                    },
+                    Move::Close {
+                        target: target("a"),
+                        outcome: "done".into(),
+                    },
+                ],
+                &AlwaysValid,
+            )
+            .unwrap_err();
+        assert!(matches!(err, Rejection::DuplicateTargetInBatch(t) if t == target("a")));
     }
 
     #[test]
