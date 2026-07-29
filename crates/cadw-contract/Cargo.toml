@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-description = "The isolated core contract for Cadw: a sans-I/O kernel for atomically folding a batch of Close/Reopen moves over addressable targets, with structural conservative retention."
-publish.workspace = true
+description = "The isolated core contract for Cadw: a sans-I/O kernel for atomically folding a batch of Create/Close/Reopen moves over addressable targets, with structural conservative retention."
+publish = true
 
 [dependencies]
