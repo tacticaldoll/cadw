@@ -3,6 +3,13 @@
 version = 4
 
 [[package]]
+name = "cadw"
+version = "0.1.0"
+dependencies = [
+ "cadw-contract",
+]
+
+[[package]]
 name = "cadw-contract"
 version = "0.1.0"
 

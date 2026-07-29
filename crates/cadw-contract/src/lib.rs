@@ -8,8 +8,10 @@
 //! port, whose [`Validator::Rejection`] is a fully structured `std::error::Error`, mirroring
 //! `pacta-contract::Registry`'s `type Error` associated-type pattern.
 //!
-//! Tier 2 experimental spike (see the workspace root `PROJECT.md`): not published, not wired into
-//! any consumer.
+//! Most consumers should depend on the [`cadw`](https://crates.io/crates/cadw) facade instead;
+//! depend on `cadw-contract` directly only to implement a `Validator` without the facade's
+//! curated re-export. See the workspace root `PROJECT.md` for the full Core Contract, Non-Goals,
+//! and current graduation status.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]

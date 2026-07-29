@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/cadw-contract", "crates/cadw-governance"]
+members = ["crates/cadw", "crates/cadw-contract", "crates/cadw-governance"]
 
 [workspace.package]
 version = "0.1.0"
@@ -14,3 +14,4 @@ publish = false
 
 [workspace.dependencies]
 tianheng = "0.3.0"
+cadw-contract = { path = "crates/cadw-contract", version = "0.1.0" }
