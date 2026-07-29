@@ -2,10 +2,9 @@
 
 ## Status
 
-**Tier 1 — graduating** (per a private family-level roadmap). Sans-I/O pure core. `ringi` is the
-real bridge consumer whose adoption satisfies graduation's consumer half; `cadw-contract` is
-configured to publish to crates.io as the release half — see `## Graduation` below for the full
-record and current publish status.
+**Tier 1 — graduated** (per a private family-level roadmap). Sans-I/O pure core, published to
+crates.io as `cadw-contract` and the curated `cadw` facade. `ringi` is the real bridge consumer
+whose adoption completed graduation — see `## Graduation` below for the full record.
 
 ## Graduation
 
@@ -44,15 +43,17 @@ absorbing a scope correction learned from a real, working reference implementati
 zero consumers and still unpublished. Whether `ringi` (or anyone) actually adopts the corrected
 kernel remains a separate, later, un-forced decision this change does not itself make.
 
-**Graduation in progress (`graduate-to-tier-1-and-publish`).** `ringi` adopted `cadw-contract`
-(initially as a temporary git dependency, pending this publish) and proved the fit through real
-end-to-end dogfooding — a batch mixing `Create` and `Close` in one turn, the exact shape
-`add-target-creation-to-kernel` exists for. Per this section's own stated condition, Tier 1
-requires a real bridge consumer *and* a public crates.io release *together*: the consumer half is
-now real; this change prepares and executes the release half. `cadw-contract` is configured to
-publish at `0.1.0`; the actual `cargo publish` runs after this change merges, pending explicit
-confirmation (publishing is irreversible). `cadw-governance` remains unpublished — it was never
-part of the trigger, and nothing outside this workspace needs it.
+**Graduation completed (`graduate-to-tier-1-and-publish`, `complete-release-metadata`,
+`add-cadw-facade`).** `ringi` adopted `cadw-contract` (initially as a temporary git dependency,
+pending this publish) and proved the fit through real end-to-end dogfooding — a batch mixing
+`Create` and `Close` in one turn, the exact shape `add-target-creation-to-kernel` exists for. Per
+this section's own stated condition, Tier 1 required a real bridge consumer *and* a public
+crates.io release *together*: the consumer half was real first; `cadw-contract` `0.1.0` and the
+curated `cadw` facade (matching `suunta`/`shaahid`'s own established core-plus-facade shape) are
+now both published, completing the release half. `cadw-governance` remains unpublished — it was
+never part of the trigger, and nothing outside this workspace needs it. `ringi`'s own dependency
+flip from `cadw-contract` to the published `cadw` facade is `ringi`'s decision, tracked in its own
+repository.
 
 ## Purpose
 
