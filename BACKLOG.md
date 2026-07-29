@@ -45,9 +45,17 @@ that question gets reopened.
 - **`Validator::Rejection` is an associated type, not a generic parameter** — mirrors
   `pacta-contract::Registry`'s `type Error: std::error::Error` pattern exactly, rather than
   inventing a new idiom for the same "domain supplies its own closed, structured error" shape.
-- **Target creation and discovery are out of scope.** A `Ledger` is constructed already populated
-  with its full set of `Open` targets by whoever assembles it — mirrors how a fresh `pacta::Pact`
-  is *submitted*, a concern `pacta` keeps separate from claim/settle authority.
+- **Target creation and discovery are out of scope — superseded for creation
+  (`add-target-creation-to-kernel`), discovery still stands.** Originally: "A `Ledger` is
+  constructed already populated with its full set of `Open` targets by whoever assembles it —
+  mirrors how a fresh `pacta::Pact` is *submitted*, a concern `pacta` keeps separate from
+  claim/settle authority." That reasoning held until a real consumer's shape existed to check it
+  against: `ringi`'s shipped structured-move authorship — `AddRisk`/`AskQuestion` create a target
+  *mid-batch*, not as a separate out-of-band submission step — 2 of its 5 `Move` variants,
+  exercised live in its own dogfooding. `Move::Create { target }` now covers this (no payload, no
+  id generation — the caller still supplies the `TargetId`; the kernel still never discovers or
+  enumerates targets on its own). `Ledger::new`'s pre-population path is unchanged and remains the
+  common case; `Create` is additive, not a replacement.
 - **The atomicity test's guarantee is narrower than first stated, and stronger in a different
   way.** `fold_batch` takes `&self` and only ever returns a freshly built `Ledger` via `Ok`, so no
   code path can leak a partially-mutated ledger on `Err` regardless of internal pass ordering —

@@ -32,13 +32,25 @@ stalled or failed project — it is a Tier 2 spike that answered its own questio
 mechanism worth proving) and never found a real consumer, exactly what least-commitment is for.
 No sunset clause, no forced timeline.
 
+**The trigger fired (this change).** `ringi` recorded, in its own `BACKLOG.md`, a settled decision
+to pursue structured move/operation authorship, then shipped it: a `Move` enum
+(`ResolveDissent`, `AddRisk`, `CloseRisk`, `AskQuestion`, `AnswerQuestion`) applied via
+`Revision::apply_moves`, tested and dogfooded end-to-end — built independently, with no code or
+crate dependency on this repository, exactly as `core ⟂ core` (Lineage, below) says a sibling
+should. Re-running the fit assessment (not assuming adoption) found one real, structural gap:
+`AddRisk`/`AskQuestion` create a target mid-batch, which the kernel could not previously express.
+This change (`add-target-creation-to-kernel`) is that assessment's concrete outcome — the kernel
+absorbing a scope correction learned from a real, working reference implementation, still with
+zero consumers and still unpublished. Whether `ringi` (or anyone) actually adopts the corrected
+kernel remains a separate, later, un-forced decision this change does not itself make.
+
 ## Purpose
 
 Cadw ("keep, retain, preserve" — Welsh) is a thin kernel for folding a batch of declared
-`Close`/`Reopen` moves over addressable targets atomically: every move in a batch applies, or
-none do. Conservative retention — a target no move mentions is untouched — is a structural
-property of the data model, not a checked invariant: there is no code path through which an
-unmentioned target could be silently dropped.
+`Create`/`Close`/`Reopen` moves over addressable targets atomically: every move in a batch
+applies, or none do. Conservative retention — a target no move mentions is untouched — is a
+structural property of the data model, not a checked invariant: there is no code path through
+which an unmentioned target could be silently dropped.
 
 The kernel owns the fold/atomicity/conflict/state-transition mechanism only. It never judges
 whether a specific `Outcome` is semantically valid — that is the domain-supplied `Validator` port,
@@ -69,12 +81,12 @@ The behavior that must be protected at all costs:
 - **Target** (`TargetId`): an opaque, domain-supplied identity for one addressable thing that can
   be `Open` or `Closed`. The kernel never interprets its content.
 - **State**: `Open` or `Closed(Outcome)`. `Outcome` is domain-opaque.
-- **Move**: a single declared operation — `Close` (with an outcome) or `Reopen` — addressing one
-  target.
+- **Move**: a single declared operation — `Create` (bring a target into existence, `Open`, no
+  payload), `Close` (with an outcome), or `Reopen` — addressing one target.
 - **Validator**: the domain-supplied port judging whether a specific `Close`'s outcome is
   semantically acceptable.
 - **Rejection**: why a batch was rejected — either a structural rule (`UnknownTarget`,
-  `AlreadyClosed`, `NotClosed`, `DuplicateTargetInBatch`) or the domain's own
+  `AlreadyExists`, `AlreadyClosed`, `NotClosed`, `DuplicateTargetInBatch`) or the domain's own
   (`Invalid(TargetId, Validator::Rejection)`).
 - **Ledger**: the set of targets and their current states.
 
@@ -84,10 +96,14 @@ Cadw core is not:
 
 - an event-sourcing framework
 - a CRDT or general diff/patch engine
-- a target-creation or target-discovery mechanism (targets are domain-supplied, already
-  populated, before a batch runs)
-- a place that knows what "reason" or "provenance" mean, or any other domain vocabulary — that
-  belongs to whichever domain adopts this
+- a target-*discovery* mechanism (the kernel never enumerates or searches for targets — a
+  consumer that wants to know what targets exist maintains that itself; `Create` only ever brings
+  *one named target* — supplied by the caller — into existence, it does not generate or discover
+  ids)
+- a place that stores any content for an `Open` target, or that knows what "reason" or
+  "provenance" mean, or any other domain vocabulary — `Create` carries no payload, and a target's
+  descriptive content (if any) stays entirely the domain's concern, correlated by the same
+  `TargetId`
 - a decision about how many times a consumer invokes anything per unit of work, or how batches
   are assembled — entirely the consumer's strategy
 - a durable or persistence mechanism of any kind
