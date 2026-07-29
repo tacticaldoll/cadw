@@ -67,6 +67,12 @@ that question gets reopened.
   only `crate::`'s own module tree starting at `src/lib.rs`; an example is a separate compilation
   target. Confirmed empirically (not assumed) — `examples/dissent_resolution.rs` uses `println!`
   and the governance gate stays clean.
+- **Graduation to Tier 1 is underway (`graduate-to-tier-1-and-publish`), not merely deferred
+  anymore.** `PROJECT.md`'s stated trigger fired: `ringi` adopted `cadw-contract` and proved the
+  fit through real end-to-end dogfooding. This change executes the release half of graduation —
+  `cadw-contract` publishing to crates.io at `0.1.0` — leaving `cadw-governance` unpublished, since
+  it was never part of the trigger. See `PROJECT.md`'s `## Graduation` for the full record and
+  current publish status.
 - **Workflow and archive convention match `ringi`/`pacta` exactly, from the first commit**: the
   four-step `explore -> propose -> apply -> sync` lifecycle (sync merges specs *and deletes* the
   change directory — no `openspec/changes/archive/` folder, never run `openspec archive`), and
@@ -80,6 +86,5 @@ that question gets reopened.
 - **A `cadw-conformance` crate.** Worth adding only once `Ledger` (or a domain's `Validator`)
   needs to be proven against more than one implementation — not before. Carrying one now, unused,
   would itself be governance surface with nothing to stay in sync with.
-- **Graduation** (real bridge consumer, public visibility, a crates.io release): fully specified
-  in `PROJECT.md`'s `## Graduation` section. Not restated here to avoid two documents describing
-  the same condition and drifting apart.
+- ~~**Graduation** (real bridge consumer, public visibility, a crates.io release)~~ — moved to
+  Settled Decisions above; no longer deferred.
