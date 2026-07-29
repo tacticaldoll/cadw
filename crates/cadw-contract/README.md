@@ -11,8 +11,8 @@ mirroring `pacta-contract::Registry`'s `type Error` associated-type pattern.
 Zero non-dev dependencies, enforced by `cadw-governance`. See the workspace root `PROJECT.md`
 for the full Core Contract and Non-Goals.
 
-Part of [Cadw](https://github.com/tacticaldoll/cadw) — Tier 1, graduated with `ringi` as its
-first real consumer.
+Part of [Cadw](https://github.com/tacticaldoll/cadw) — see `PROJECT.md`'s `## Status` for the
+current tier.
 
 ## License
 
