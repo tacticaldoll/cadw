@@ -11,6 +11,7 @@ use std::{
 use tianheng::prelude::*;
 
 const CONTRACT_REASON: &str = "cadw-contract is the isolated core contract: a sans-I/O kernel with no time/lease/crash-recovery dimension. It needs no dependency at all, so it may depend on nothing.";
+const FACADE_REASON: &str = "cadw is the curated public entrypoint: a pure re-export facade with no logic of its own. It must depend on cadw-contract only, never acquiring a dependency the core itself does not have.";
 const GOVERNANCE_REASON: &str = "the governance gate must stay independent of the workspace graph it judges: it may depend only on tianheng, never on cadw-contract or any other workspace crate under judgment.";
 const CORE_NO_IO_REASON: &str = "the sans-I/O core contract performs no I/O: no code in cadw-contract may call into std::io/fs/net/process; a batch fold is a synchronous, in-memory operation, never a place I/O could hide.";
 const NO_SERDE_REASON: &str = "cadw-contract is transient in-memory mechanism, not a durable record type: it must not acquire Serialize/Deserialize anywhere. Serialization of a domain's Outcome is that domain's own concern, never this crate's.";
@@ -48,6 +49,11 @@ fn constitution() -> Constitution {
             CrateBoundary::crate_("cadw-contract")
                 .restrict_dependencies_to(Vec::<&str>::new())
                 .because(CONTRACT_REASON),
+        )
+        .boundary(
+            CrateBoundary::crate_("cadw")
+                .restrict_dependencies_to(["cadw-contract"])
+                .because(FACADE_REASON),
         )
         .boundary(
             CrateBoundary::crate_("cadw-governance")

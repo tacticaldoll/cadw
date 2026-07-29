@@ -20,14 +20,17 @@ that question gets reopened.
 
 ## Settled Decisions
 
-- **Two-crate layout, not pacta's six.** `pacta`'s workspace splits `pacta-contract`/
-  `pacta-executor`/`pacta-driver`/`pacta-memory`/`pacta-conformance`/the `pacta` facade because it
-  has multiple backends implementing one trait, an execution-composition layer, and a curated
-  facade distinct from its advanced core. `cadw-contract` has none of that: `Ledger` is one
-  concrete type, not a trait with multiple implementations, and there is no separate
-  execution/composition concern to seam off. Building those crates now would be governance
-  surface for concerns that don't exist yet — see "A `cadw-conformance` crate" below for the
-  condition under which that changes.
+- **Three-crate layout (core, facade, governance), not pacta's six.** `pacta`'s workspace splits
+  `pacta-contract`/`pacta-executor`/`pacta-driver`/`pacta-memory`/`pacta-conformance`/the `pacta`
+  facade because it has multiple backends implementing one trait, an execution-composition layer,
+  and a curated facade distinct from its advanced core. `cadw-contract` has none of the
+  multi-backend or execution-composition concerns: `Ledger` is one concrete type, not a trait with
+  multiple implementations. Building those extra crates now would be governance surface for
+  concerns that don't exist yet — see "A `cadw-conformance` crate" below for the condition under
+  which that changes. A curated facade (`cadw`, `add-cadw-facade`) is a different thing from those
+  execution-composition crates, and does earn its keep: `suunta`/`shaahid` both prove the same
+  core-plus-facade shape, and `ringi` depends on the facade for every other family sibling —
+  `cadw-contract` was the sole, temporary exception until this facade existed.
 - **`cadw-contract` has zero dependencies — stricter than `pacta-contract`'s** (which allows
   `serde`, `uuid`). `TargetId` wraps a plain `String`; nothing in this kernel is serialized or
   carries a UUID, so there is nothing to allow.

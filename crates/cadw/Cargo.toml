@@ -1,0 +1,15 @@
+[package]
+name = "cadw"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+keywords.workspace = true
+categories.workspace = true
+description = "Curated entrypoint for Cadw: a thin, sans-I/O batch-fold core you compose."
+publish = true
+
+[dependencies]
+cadw-contract.workspace = true

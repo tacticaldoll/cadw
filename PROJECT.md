@@ -124,7 +124,7 @@ Cadw core is not:
              tianheng  +  〔sans-I/O · OpenSpec · vocab-as-governance · least-commitment〕
                               │  (inherited discipline — provenance)
                               ▼
-                      ●  Cadw (Tier 2)
+                      ●  Cadw (Tier 1)
 
    siblings: ▢ ▢ ▢  ← deliberately blank (sibling-blind)
    footnote: workspace shape and governance-first sequencing observed from the pacta reference
@@ -140,6 +140,11 @@ This repository's first change, `initial-project-shape`, replaced this file's pl
 chose the two-crate workspace layout (`cadw-contract`, `cadw-governance`), ported the proven
 mechanism and its vacuum tests, and built `cadw-governance` first per explicit direction rather
 than as an afterthought.
+
+A third crate, `cadw` (the curated facade, `pub use cadw_contract::*;`), was added at
+graduation (`add-cadw-facade`) to match `suunta`/`shaahid`'s own established two-crate-plus-facade
+shape — see `BACKLOG.md`'s "Two-crate layout" entry for why this does not reopen that decision's
+original reasoning.
 
 ## Change Prioritization
 
