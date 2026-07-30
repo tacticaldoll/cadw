@@ -1,10 +1,11 @@
 # Cadw
 
-**Tier 2 experimental spike — not published to crates.io, not wired into any consumer.** See
-`PROJECT.md` for the Core Contract and `BACKLOG.md` for settled decisions and their reasons.
+**Tier 1 — graduated and published to crates.io.** `ringi` is the real bridge consumer whose
+adoption completed graduation; see `PROJECT.md` for the Core Contract and full Graduation record,
+and `BACKLOG.md` for every settled decision and its reason.
 
 Cadw ("keep, retain, preserve" — Welsh) is a sans-I/O kernel for atomically folding a batch of
-individually-validated `Close`/`Reopen` moves over addressable targets, with conservative
+individually-validated `Create`/`Close`/`Reopen` moves over addressable targets, with conservative
 retention as a structural property of the data model rather than a checked invariant.
 
 Born from a design discussion while hardening `ringi`'s deliberation loop: an arbitrator authoring
@@ -12,14 +13,16 @@ an entire successor document each turn (whole-document echo) kept giving two rea
 to hide — an immutable field silently drifting, and a domain-rejected response still settling as
 "succeeded." Two of this crate's vacuum tests are direct translations of those two bugs.
 
-Whether this graduates into a real, adopted family member (in the style of `pacta`/`suunta`/
-`shaahid`) is an open question this spike exists to help answer — not an assumption it starts
-from.
+`ringi` adopted the kernel for its own structured move/operation authorship, proved the fit
+through real end-to-end dogfooding, and both `cadw-contract` and the `cadw` facade are now
+published — the open question this spike started with is answered.
 
 ## Workspace
 
 - `crates/cadw-contract` — the kernel: `TargetId`, `State`, `Move`, `Validator`, `Rejection`,
   `Ledger::fold_batch`.
+- `crates/cadw` — the curated public entrypoint: a pure re-export facade, matching
+  `pacta`/`suunta`/`shaahid`'s own facade convention. This is the recommended crate to depend on.
 - `crates/cadw-governance` — executable architectural governance (tianheng), built first per
   explicit direction. Run it with:
 
