@@ -128,6 +128,33 @@ that question gets reopened.
   (`AGENTS.md`, `PROJECT.md`, `README.md`, and this file were grepped clean) — only
   `CHANGELOG.md` does, in its already-released `[0.1.0]` history, which stays untouched as the
   historical record it is.
+- **Pre-release audit performed; no changes required beyond what is already recorded above.**
+  Swept `cadw-contract`'s `fold_batch` logic by hand for correctness (duplicate-detection runs
+  before any structural check; structural checks always read the pre-batch `self.targets`, never
+  a partially-mutated intermediate state; the apply pass only ever produces a fresh `Ledger` via
+  `Ok`, so no path can leak a partial mutation on `Err`) — found nothing beyond what the existing
+  vacuum tests already prove. Ran `cargo clippy --workspace --all-targets -- -W dead_code -W
+  unused` (clean) and `cargo clippy -- -W clippy::pedantic` (informational only, not part of the
+  Definition of Done) to check for anything `-D warnings` might not surface. Two pedantic
+  suggestions were considered and declined:
+  - Merging `Move::Create`'s and `Move::Reopen`'s apply-loop match arms (both currently insert
+    `State::Open`, so clippy's `match_same_arms` fires). Declined: `Move` is `#[non_exhaustive]`
+    specifically to keep these as distinct, separately-named operations (see this file's own
+    entry above on that point) — merging the arms would trade away that visible domain distinction
+    for one fewer line, exactly the kind of premature-DRY this project's vocab-as-governance stance
+    argues against.
+  - `clippy::manual_string_new` on `"".into()` inside `lib.rs`'s test module. Declined as too
+    trivial (test-only, purely stylistic) to be worth touching.
+  Also checked `cargo update --dry-run` (nothing to update — already at latest compatible
+  versions) and `cargo deny check --show-stats` (0 warnings across advisories/bans/licenses/
+  sources). No documentation drift found: all three crate `README.md`s were re-read against
+  `PROJECT.md`'s current `## Status`, and a repo-wide grep for stale `docs/adr`/`ADR` mentions
+  turned up only this file's own explanatory prose and `CHANGELOG.md`'s untouched historical
+  record. No crates.io release was cut: neither `cadw-contract` nor `cadw`'s published source
+  changed since `0.1.0` — this session's prior changes touched only `BACKLOG.md`, `CHANGELOG.md`,
+  `docs/adr/`, spec text, `cadw-governance`, CI, and Definition-of-Done docs, so there is no new
+  code to publish. `CHANGELOG.md`'s `[Unreleased]` section continues to accumulate until a real
+  code change to a published crate warrants cutting a new version.
 
 ## Deferred Work
 
