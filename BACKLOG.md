@@ -82,6 +82,52 @@ that question gets reopened.
   earlier direct-to-`main` commit and a later default-`openspec-archive` sync were both corrected
   by deleting and rebuilding the repository, rather than retrofitting history — see this
   repository's actual `git log` for the clean result.)
+- **`architectural-governance/spec.md`'s active-prose Requirement understated what the gate
+  checks.** `cadw-governance/src/main.rs`'s `ACTIVE_PROSE_FILES` has always covered four files
+  (`AGENTS.md`, `PROJECT.md`, `README.md`, `BACKLOG.md`); the spec's Requirement text named only
+  the first three. Corrected the spec to name all four — the code's behavior was already right,
+  the spec simply never caught up to it.
+- **`CHANGELOG.md` is deliberately excluded from the active-prose stale-phrase gate.** Its
+  `[0.1.0]` entry legitimately narrates the discarded working names this repository grew out of
+  (see `cadw-governance/src/main.rs`'s `STALE_PHRASES` for the literal phrases — deliberately not
+  repeated verbatim here, since this file is itself governed prose) as history of the rename
+  itself — adding `CHANGELOG.md` to `ACTIVE_PROSE_FILES` would make the gate fail on the project's
+  own release history. Recorded here so a future session does not "complete" the governed-file
+  list by adding it and break CI discovering why the hard way.
+- **Two of `shaahid-governance`'s safety-net tests were adopted verbatim in spirit.** `shaahid`
+  pins the identical `tianheng = "0.3.0"` (checked against both `Cargo.lock`s) and already tests
+  `current_active_prose_satisfies_governance` (runs `check_active_prose` against the real
+  workspace root, not just string fixtures) and `missing_active_prose_file_fails_loudly` (a root
+  missing every governed file must fail loudly, not vacuously pass). `cadw-governance` had the
+  identical `check_active_prose` logic — including the same unreadable-file branch — with neither
+  test exercising it; `cargo test -p cadw-governance` alone could not have caught a mistake in
+  either, only CI's separate `check` invocation could. Added both.
+- **Not adopted: `shaahid`'s generated `law_projection_is_fresh` / `AGENTS.*-law.md` mechanism.**
+  `cadw`'s Constitution declares 3 boundaries total; `shaahid`'s declares roughly a dozen across
+  three dependency-kind variants per crate plus a semantic async-exposure reaction. Reading
+  `constitution()` directly is still the fastest way to audit cadw's boundaries — a generated
+  projection earns its keep once that stops being true, the same "not before it's needed"
+  reasoning already applied to deferring a `cadw-conformance` crate below. Revisit if/when the
+  boundary count grows enough to change that.
+- **`docs/adr/` is dissolved; this repository does not keep a standalone ADR practice.**
+  `PROJECT.md`'s own Lineage names `pacta` as the reference implementation this repository's
+  shape was observed from — and `pacta` has no `docs/adr/` at all, recording every
+  settled/deferred decision in its own `BACKLOG.md` (its `PROJECT.md` References line reads, word
+  for word, "Deferred decisions: `BACKLOG.md`") plus `docs/blueprint.md` for architecture. Five of
+  this family's other nine sibling repositories (`shaahid`, `ringi`, `suunta`, `mirrorlane`,
+  `worklane`) likewise carry no ADR folder; only `kengen`/`lengkap`/`velkren` do, and none of those
+  is cadw's stated reference. cadw's three ADRs had, in practice, already drifted into
+  duplicating `BACKLOG.md`: ADR 0003's content ("sync means delete, not archive") was already
+  substantively restated by this file's own "Workflow and archive convention match ringi/pacta
+  exactly" entry above; ADR 0002's Decision ("use OpenSpec as the source of truth") was already
+  stated more fully by `AGENTS.md`'s "This Project Uses OpenSpec" section — its Context is the one
+  part worth preserving here: chat history and agent-specific command shims are not a reliable
+  source of truth for AI-assisted development, which is why this project's actual behavior lives in
+  `openspec/specs/` instead. ADR 0001 (the decision to keep ADRs at all) is superseded outright by
+  this entry. All three files were removed; no other governed prose file referenced `docs/adr/`
+  (`AGENTS.md`, `PROJECT.md`, `README.md`, and this file were grepped clean) — only
+  `CHANGELOG.md` does, in its already-released `[0.1.0]` history, which stays untouched as the
+  historical record it is.
 
 ## Deferred Work
 
