@@ -17,11 +17,20 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `AGENTS.md` already carried. All non-duplicated reasoning was folded into new `BACKLOG.md`
   Settled Decisions.
 
+- `batch-fold-core/spec.md`'s "Domain validation is a fully structured port, never a free
+  string" Requirement gains a Scenario stating that its realistic multi-field composition proof
+  must be continuously demonstrated, not merely compiled.
+
 ### Added
 
 - `cadw-governance`: a code comment recording why `CHANGELOG.md` is deliberately excluded from
   the active-prose gate, and two safety-net tests adopted from sibling `shaahid-governance`
   (`current_active_prose_satisfies_governance`, `missing_active_prose_file_fails_loudly`).
+- The Definition of Done (`AGENTS.md`, `docs/development-flow.md`, `README.md`) and CI's `dod` job
+  now run `cargo run --example dissent_resolution -p cadw-contract`. Previously
+  `cargo build`/`cargo test --workspace` only compiled this non-toy example; nothing executed its
+  assertions, so a regression that kept it compiling but broke its behavior would have passed
+  every existing gate silently.
 
 ## [0.1.0] - 2026-07-29
 

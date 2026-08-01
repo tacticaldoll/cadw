@@ -17,6 +17,7 @@ jobs:
           cargo clippy --workspace --all-targets -- -D warnings
           cargo fmt --all --check
           RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+          cargo run --example dissent_resolution -p cadw-contract
 
   supply-chain:
     name: Supply chain (cargo-deny)
