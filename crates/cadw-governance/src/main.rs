@@ -16,6 +16,9 @@ const GOVERNANCE_REASON: &str = "the governance gate must stay independent of th
 const CORE_NO_IO_REASON: &str = "the sans-I/O core contract performs no I/O: no code in cadw-contract may call into std::io/fs/net/process; a batch fold is a synchronous, in-memory operation, never a place I/O could hide.";
 const NO_SERDE_REASON: &str = "cadw-contract is transient in-memory mechanism, not a durable record type: it must not acquire Serialize/Deserialize anywhere. Serialization of a domain's Outcome is that domain's own concern, never this crate's.";
 
+// CHANGELOG.md is deliberately absent: its released version entries legitimately narrate the
+// discarded working names ("Motion", "motion-contract") as history of the rename itself, so
+// governing it here would fail the gate on the project's own release history.
 const ACTIVE_PROSE_FILES: &[&str] = &["AGENTS.md", "PROJECT.md", "README.md", "BACKLOG.md"];
 
 const STALE_PHRASES: &[StalePhrase] = &[
@@ -207,5 +210,38 @@ mod tests {
         let violations = check_prose_content("PROJECT.md", content);
         assert_eq!(violations.len(), 1);
         assert_eq!(violations[0].phrase, "motion-contract");
+    }
+
+    #[test]
+    fn current_active_prose_satisfies_governance() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+
+        assert_eq!(check_active_prose(&root), Ok(()));
+    }
+
+    #[test]
+    fn missing_active_prose_file_fails_loudly() {
+        // A root with none of the canonical governed prose files must fail the gate, not pass
+        // vacuously by skipping every unreadable file.
+        let root = env::temp_dir().join(format!(
+            "cadw-governance-missing-prose-{}",
+            std::process::id()
+        ));
+        if root.exists() {
+            fs::remove_dir_all(&root).expect("stale temporary directory should be removable");
+        }
+        fs::create_dir_all(&root).expect("temporary directory should be creatable");
+
+        let Err(violations) = check_active_prose(&root) else {
+            panic!("a root missing every governed prose file must fail the gate");
+        };
+        assert!(
+            violations
+                .iter()
+                .any(|violation| violation.phrase == "<unreadable>"),
+            "expected an unreadable-file violation naming a governed file: {violations:?}"
+        );
+
+        fs::remove_dir_all(&root).expect("temporary directory should be removable");
     }
 }

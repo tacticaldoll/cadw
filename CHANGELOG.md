@@ -4,6 +4,25 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- `openspec/specs/architectural-governance/spec.md`'s active-prose Requirement corrected to name
+  all four files `cadw-governance` has always checked (`AGENTS.md`, `PROJECT.md`, `README.md`,
+  `BACKLOG.md`), not three — the spec had not caught up to the code.
+- `docs/adr/` removed; this repository no longer keeps a standalone ADR practice. `PROJECT.md`'s
+  own Lineage names `pacta` — which keeps no ADR folder — as this repository's reference
+  implementation, and cadw's three ADRs had drifted into duplicating content `BACKLOG.md` and
+  `AGENTS.md` already carried. All non-duplicated reasoning was folded into new `BACKLOG.md`
+  Settled Decisions.
+
+### Added
+
+- `cadw-governance`: a code comment recording why `CHANGELOG.md` is deliberately excluded from
+  the active-prose gate, and two safety-net tests adopted from sibling `shaahid-governance`
+  (`current_active_prose_satisfies_governance`, `missing_active_prose_file_fails_loudly`).
+
 ## [0.1.0] - 2026-07-29
 
 First release: `cadw-contract`'s sans-I/O batch-fold kernel and the `cadw` curated facade, both

@@ -52,12 +52,20 @@ workspace crate under its judgment.
 
 ### Requirement: Active prose never reintroduces discarded working-name vocabulary
 
-`PROJECT.md`, `README.md`, and `AGENTS.md` SHALL never contain the discarded working names
-`"Motion"` or `"motion-contract"` — the identity this repository grew out of before the brand
-settled on Cadw.
+`PROJECT.md`, `README.md`, `AGENTS.md`, and `BACKLOG.md` SHALL never contain the discarded
+working names `"Motion"` or `"motion-contract"` — the identity this repository grew out of before
+the brand settled on Cadw. `CHANGELOG.md` is deliberately exempt: its released version entries
+legitimately narrate these discarded names as history of the rename itself.
 
 #### Scenario: The governance gate fails on a stale working-name phrase
 
-- **WHEN** `PROJECT.md`, `README.md`, or `AGENTS.md` contains the phrase `"Motion"` or
-  `"motion-contract"`
+- **WHEN** `PROJECT.md`, `README.md`, `AGENTS.md`, or `BACKLOG.md` contains the phrase
+  `"Motion"` or `"motion-contract"`
 - **THEN** `cargo run -p cadw-governance -- check` fails, naming the file, line, and phrase
+
+#### Scenario: A missing governed prose file fails loudly
+
+- **WHEN** any of `AGENTS.md`, `PROJECT.md`, `README.md`, or `BACKLOG.md` cannot be read at the
+  workspace root
+- **THEN** `cargo run -p cadw-governance -- check` fails, naming the missing file, rather than
+  silently skipping it and passing
