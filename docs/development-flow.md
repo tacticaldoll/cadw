@@ -52,4 +52,5 @@ cargo fmt --all --check
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
 cargo deny check
 cargo run -p cadw-governance -- check --manifest-path Cargo.toml
+cargo run --example dissent_resolution -p cadw-contract
 ```

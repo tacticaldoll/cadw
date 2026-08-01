@@ -121,9 +121,15 @@ cargo fmt --all --check
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
 cargo deny check
 cargo run -p cadw-governance -- check --manifest-path Cargo.toml
+cargo run --example dissent_resolution -p cadw-contract
 ```
 
-The last line is the executable architectural governance gate (tianheng). It
+The last command executes `cadw-contract`'s non-toy consumer example, proving
+`batch-fold-core/spec.md`'s realistic multi-field `Validator` scenario continues
+to hold — `cargo build`/`cargo test` alone only compile it, never run its
+assertions.
+
+The `cadw-governance` line is the executable architectural governance gate (tianheng). It
 enforces `PROJECT.md`'s Core Contract boundaries — do not treat it as optional
 or as a slower duplicate of clippy. `cargo deny check` enforces `deny.toml`'s
 license/advisory/bans/sources policy over the resolved dependency graph. CI

@@ -88,6 +88,14 @@ domain-supplied content. The port SHALL compose with a realistic, multi-field do
 - **THEN** `fold_batch` still rejects the whole batch atomically on the first invalid move, and an
   individually-valid move elsewhere in the same batch still does not apply
 
+#### Scenario: The realistic multi-field composition scenario is continuously demonstrated
+
+- **WHEN** the workspace's Definition of Done is run, on a developer's machine or in CI
+- **THEN** `cadw-contract`'s non-toy consumer example (`examples/dissent_resolution.rs`) is
+  executed via `cargo run --example`, not merely compiled, so its assertions proving this
+  Requirement's realistic-outcome scenario must pass rather than being verified only when a human
+  happens to run it by hand
+
 ### Requirement: Unknown targets are rejected
 
 `fold_batch` SHALL reject any `Move` addressing a `TargetId` the `Ledger` does not contain.
