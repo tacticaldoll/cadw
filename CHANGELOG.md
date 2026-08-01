@@ -6,6 +6,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-01
+
+Governance, documentation, and CI hardening. No change to `cadw-contract` or `cadw`'s published
+source — this release exists to record the accumulated process work below, not new library
+behavior.
+
 ### Changed
 
 - `openspec/specs/architectural-governance/spec.md`'s active-prose Requirement corrected to name
@@ -16,7 +22,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   implementation, and cadw's three ADRs had drifted into duplicating content `BACKLOG.md` and
   `AGENTS.md` already carried. All non-duplicated reasoning was folded into new `BACKLOG.md`
   Settled Decisions.
-
 - `batch-fold-core/spec.md`'s "Domain validation is a fully structured port, never a free
   string" Requirement gains a Scenario stating that its realistic multi-field composition proof
   must be continuously demonstrated, not merely compiled.
@@ -31,6 +36,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `cargo build`/`cargo test --workspace` only compiled this non-toy example; nothing executed its
   assertions, so a regression that kept it compiling but broke its behavior would have passed
   every existing gate silently.
+
+### Chore
+
+- Pre-release audit: hand-swept `fold_batch` for correctness, ran clippy beyond the Definition of
+  Done's default lint level (`dead_code`/`unused`, `clippy::pedantic`), checked
+  `cargo update --dry-run` and `cargo deny --show-stats`, and re-read every crate `README.md`
+  against `PROJECT.md`'s current status. No bugs, dead code, or documentation drift found; two
+  pedantic clippy suggestions were considered and declined (recorded in `BACKLOG.md`).
 
 ## [0.1.0] - 2026-07-29
 
@@ -108,4 +121,5 @@ the kernel for its own residual-ledger validation.
   published, `ringi`-adopted status, and `## Workspace` now lists `crates/cadw` alongside
   `cadw-contract`/`cadw-governance`.
 
+[0.1.1]: https://github.com/tacticaldoll/cadw/releases/tag/v0.1.1
 [0.1.0]: https://github.com/tacticaldoll/cadw/releases/tag/v0.1.0
