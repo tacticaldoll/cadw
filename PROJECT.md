@@ -1,10 +1,26 @@
 # Project Contract — Cadw
 
+## Vision
+
+Cadw ("keep, retain, preserve" — Welsh) is a thin kernel for folding a batch of declared
+`Create`/`Close`/`Reopen` moves over addressable targets atomically: every move in a batch
+applies, or none do. Conservative retention — a target no move mentions is untouched — is a
+structural property of the data model, not a checked invariant: there is no code path through
+which an unmentioned target could be silently dropped.
+
+## Product Positioning
+
+The kernel owns the fold/atomicity/conflict/state-transition mechanism only. It never judges
+whether a specific `Outcome` is semantically valid — that is the domain-supplied `Validator` port,
+whose `Rejection` associated type is a fully structured `std::error::Error`, mirroring the
+associated `type Error` pattern of the reference implementation Cadw's workspace shape was
+observed from (see `## Lineage`).
+
 ## Status
 
 **Tier 1 — graduated** (per a private family-level roadmap). Sans-I/O pure core, published to
-crates.io as `cadw-contract` and the curated `cadw` facade. `ringi` is the real bridge consumer
-whose adoption completed graduation — see `## Graduation` below for the full record.
+crates.io as `cadw-contract` and the curated `cadw` facade. A real bridge consumer's adoption
+completed graduation — see `## Graduation` below for the full record.
 
 ## Graduation
 
@@ -13,13 +29,13 @@ domain-language review are all done — `cadw-contract`'s shape is as proven as 
 isolation. What remains is not more work on the crate; it is a decision, and the decision has a
 concrete trigger, not an open-ended "later":
 
-**Trigger**: `ringi` — the project whose arbitrator-authors-a-whole-document tension is what this
-crate grew out of — or another real consumer, actually decides to pursue structured move/
-operation authorship for its own domain, replacing whole-document echo with discrete, validated
-operations. That decision belongs to the consumer, not to Cadw: this repository does not propose
-adoption to `ringi`, or to anyone. If and when such a decision is recorded in that project's own
-governance, re-run a real assessment of whether `cadw-contract`'s shape actually fits — do not
-assume adoption follows automatically from the trigger firing.
+**Trigger**: the consumer whose arbitrator-authors-a-whole-document tension is what this crate grew
+out of — or another real consumer — actually decides to pursue structured move/operation authorship
+for its own domain, replacing whole-document echo with discrete, validated operations. That decision
+belongs to the consumer, not to Cadw: this repository does not propose adoption to that consumer, or
+to anyone. If and when such a decision is recorded in that project's own governance, re-run a real
+assessment of whether `cadw-contract`'s shape actually fits — do not assume adoption follows
+automatically from the trigger firing.
 
 **Not a trigger**: growing `cadw-contract`'s generality — a new `Move` variant, a new `Rejection`
 kind, a `cadw-conformance` crate for a hypothetical second implementation — in anticipation of a
@@ -31,42 +47,29 @@ stalled or failed project — it is a Tier 2 spike that answered its own questio
 mechanism worth proving) and never found a real consumer, exactly what least-commitment is for.
 No sunset clause, no forced timeline.
 
-**The trigger fired (this change).** `ringi` recorded, in its own `BACKLOG.md`, a settled decision
-to pursue structured move/operation authorship, then shipped it: a `Move` enum
+**The trigger fired (this change).** The originating consumer recorded, in its own backlog, a
+settled decision to pursue structured move/operation authorship, then shipped it: a `Move` enum
 (`ResolveDissent`, `AddRisk`, `CloseRisk`, `AskQuestion`, `AnswerQuestion`) applied via
 `Revision::apply_moves`, tested and dogfooded end-to-end — built independently, with no code or
 crate dependency on this repository, exactly as `core ⟂ core` (Lineage, below) says a sibling
 should. Re-running the fit assessment (not assuming adoption) found one real, structural gap:
 `AddRisk`/`AskQuestion` create a target mid-batch, which the kernel could not previously express.
 This change (`add-target-creation-to-kernel`) is that assessment's concrete outcome — the kernel
-absorbing a scope correction learned from a real, working reference implementation, still with
-zero consumers and still unpublished. Whether `ringi` (or anyone) actually adopts the corrected
-kernel remains a separate, later, un-forced decision this change does not itself make.
+absorbing a scope correction learned from the originating consumer's real, working implementation,
+still with zero consumers and still unpublished. Whether that consumer (or anyone) actually adopts
+the corrected kernel remains a separate, later, un-forced decision this change does not itself make.
 
 **Graduation completed (`graduate-to-tier-1-and-publish`, `complete-release-metadata`,
-`add-cadw-facade`).** `ringi` adopted `cadw-contract` (initially as a temporary git dependency,
-pending this publish) and proved the fit through real end-to-end dogfooding — a batch mixing
-`Create` and `Close` in one turn, the exact shape `add-target-creation-to-kernel` exists for. Per
-this section's own stated condition, Tier 1 required a real bridge consumer *and* a public
+`add-cadw-facade`).** The originating consumer adopted `cadw-contract` (initially as a temporary git
+dependency, pending this publish) and proved the fit through real end-to-end dogfooding — a batch
+mixing `Create` and `Close` in one turn, the exact shape `add-target-creation-to-kernel` exists for.
+Per this section's own stated condition, Tier 1 required a real bridge consumer *and* a public
 crates.io release *together*: the consumer half was real first; `cadw-contract` `0.1.0` and the
-curated `cadw` facade (matching `suunta`/`shaahid`'s own established core-plus-facade shape) are
-now both published, completing the release half. `cadw-governance` remains unpublished — it was
-never part of the trigger, and nothing outside this workspace needs it. `ringi`'s own dependency
-flip from `cadw-contract` to the published `cadw` facade is `ringi`'s decision, tracked in its own
+curated `cadw` facade (matching the family's established core-plus-facade shape) are now both
+published, completing the release half. `cadw-governance` remains unpublished — it was never part of
+the trigger, and nothing outside this workspace needs it. The consumer's own dependency flip from
+`cadw-contract` to the published `cadw` facade is that consumer's decision, tracked in its own
 repository.
-
-## Purpose
-
-Cadw ("keep, retain, preserve" — Welsh) is a thin kernel for folding a batch of declared
-`Create`/`Close`/`Reopen` moves over addressable targets atomically: every move in a batch
-applies, or none do. Conservative retention — a target no move mentions is untouched — is a
-structural property of the data model, not a checked invariant: there is no code path through
-which an unmentioned target could be silently dropped.
-
-The kernel owns the fold/atomicity/conflict/state-transition mechanism only. It never judges
-whether a specific `Outcome` is semantically valid — that is the domain-supplied `Validator` port,
-whose `Rejection` associated type is a fully structured `std::error::Error`, mirroring
-`pacta-contract::Registry`'s `type Error` pattern.
 
 ## Core Contract
 
@@ -82,24 +85,11 @@ The behavior that must be protected at all costs:
   kernel's rejection vocabulary and the domain's own.
 - **No time dimension.** No lease, no expiry, no crash-recovery concern. A batch fold is
   synchronous and in-memory, assumed to run entirely within an already-claimed unit of work a
-  consumer has durably claimed through its own mechanism (e.g. `pacta`, composed outside this
-  crate). Cadw does not compete with `pacta`'s scope — it has none of pacta's reasons to exist.
+  consumer has durably claimed through its own mechanism (for example a separate claim library,
+  composed outside this crate). Cadw does not compete with such a library's scope — it has none
+  of its reasons to exist.
 - **Governance with teeth.** `cadw-governance` (tianheng) enforces the boundaries this document
   claims, executably — see `crates/cadw-governance/README.md`.
-
-## Terminology
-
-- **Target** (`TargetId`): an opaque, domain-supplied identity for one addressable thing that can
-  be `Open` or `Closed`. The kernel never interprets its content.
-- **State**: `Open` or `Closed(Outcome)`. `Outcome` is domain-opaque.
-- **Move**: a single declared operation — `Create` (bring a target into existence, `Open`, no
-  payload), `Close` (with an outcome), or `Reopen` — addressing one target.
-- **Validator**: the domain-supplied port judging whether a specific `Close`'s outcome is
-  semantically acceptable.
-- **Rejection**: why a batch was rejected — either a structural rule (`UnknownTarget`,
-  `AlreadyExists`, `AlreadyClosed`, `NotClosed`, `DuplicateTargetInBatch`) or the domain's own
-  (`Invalid(TargetId, Validator::Rejection)`).
-- **Ledger**: the set of targets and their current states.
 
 ## Non-Goals
 
@@ -128,11 +118,10 @@ Cadw core is not:
                       ●  Cadw (Tier 1)
 
    siblings: ▢ ▢ ▢  ← deliberately blank (sibling-blind)
-   footnote: workspace shape and governance-first sequencing observed from the pacta reference
+   footnote: workspace shape and governance-first sequencing observed from a reference
              implementation (dual MIT/Apache license, Cargo.toml conventions, associated-type
-             Validator port mirroring `pacta-contract::Registry`'s `type Error`, and a
-             tianheng-governed workspace built before feature work, not after); no code or crate
-             dependency on pacta — core ⟂ core.
+             Validator port mirroring its `type Error`, and a tianheng-governed workspace built
+             before feature work, not after); no code or crate dependency on it — core ⟂ core.
 ```
 
 ## First Project Change
@@ -143,7 +132,7 @@ mechanism and its vacuum tests, and built `cadw-governance` first per explicit d
 than as an afterthought.
 
 A third crate, `cadw` (the curated facade, `pub use cadw_contract::*;`), was added at
-graduation (`add-cadw-facade`) to match `suunta`/`shaahid`'s own established two-crate-plus-facade
+graduation (`add-cadw-facade`) to match the family's established two-crate-plus-facade
 shape — see `BACKLOG.md`'s "Two-crate layout" entry for why this does not reopen that decision's
 original reasoning.
 
@@ -157,3 +146,11 @@ When comparing possible changes, prefer the one that protects the Core Contract 
 3. Operator and developer ergonomics (docs, examples).
 4. Graduation decisions (a real consumer, a public release) — never pursued merely because a
    correctness or governance change makes them easier.
+
+## References
+
+- `docs/domain-language.md` — the canonical vocabulary (Target, State, Move, Validator, Rejection,
+  Ledger).
+- `BACKLOG.md` — the origin, every settled decision and its reason, and deferred work.
+- `crates/cadw-governance/README.md` — the boundaries the governance gate enforces.
+- `openspec/specs/` — the shipped specification.

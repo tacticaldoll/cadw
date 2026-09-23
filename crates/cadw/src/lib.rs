@@ -77,5 +77,5 @@
 // A glob re-export makes "the facade withholds nothing" structurally true: the facade's
 // surface *is* `cadw-contract`'s public surface, enforced by the compiler in both directions.
 // A new public item in the core appears here automatically; none can be silently dropped or
-// left behind. Matches `suunta`'s and `shaahid`'s own facades exactly.
+// left behind. No item is curated by name: the facade adds, renames, and hides nothing.
 pub use cadw_contract::*;
