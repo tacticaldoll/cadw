@@ -189,6 +189,258 @@ fn check_prose_content(path: &str, content: &str) -> Vec<ProseViolation> {
 mod tests {
     use super::*;
 
+    const LAW_PROJECTION_PREAMBLE: &str = "\
+# Cadw Tianheng Law Projection
+
+This file is generated from `constitution()` in `crates/cadw-governance/src/main.rs`.
+The Rust declaration is authoritative; do not edit the projection by hand.
+Regenerate it with `BLESS=1 cargo test -p cadw-governance law_projection_is_fresh`.
+
+";
+
+    fn workspace_root() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+    }
+
+    #[test]
+    fn current_workspace_satisfies_constitution() {
+        GovernanceTest::for_constitution(constitution())
+            .with_manifest_dir(workspace_root())
+            .assert_clean();
+    }
+
+    #[test]
+    fn every_workspace_crate_is_covered() {
+        GovernanceTest::for_constitution(constitution())
+            .with_manifest_dir(workspace_root())
+            .assert_all_workspace_members_covered();
+    }
+
+    #[test]
+    fn law_projection_is_fresh() {
+        GovernanceTest::for_constitution(constitution())
+            .with_manifest_dir(workspace_root())
+            .assert_projection_fresh_with_preamble("AGENTS.cadw-law.md", LAW_PROJECTION_PREAMBLE);
+    }
+
+    // Violating witnesses: one per accepted boundary. Each scratch workspace is the clean
+    // baseline below plus exactly one planted leak, so the asserted violation can only come from
+    // that leak; `scratch_baseline_is_clean` proves the baseline itself passes.
+
+    #[test]
+    fn scratch_baseline_is_clean() {
+        let workspace = TempWorkspace::baseline("cadw-governance-baseline-clean");
+
+        let outcome = check_constitution(&constitution(), &workspace.manifest());
+        assert!(
+            matches!(outcome, Outcome::Clean(_)),
+            "the leak-free scratch baseline must pass: {outcome:?}"
+        );
+    }
+
+    #[test]
+    fn unapproved_contract_dependency_is_rejected() {
+        let workspace = TempWorkspace::baseline("cadw-governance-contract-dependency");
+        workspace.write_package("cadw-contract", EXTRA_DEPENDENCY, CLEAN_CONTRACT_SOURCE);
+
+        assert_single_enforced(&workspace, "cadw-contract", DEPENDENCY_RULE, "extra");
+    }
+
+    #[test]
+    fn unapproved_facade_dependency_is_rejected() {
+        let workspace = TempWorkspace::baseline("cadw-governance-facade-dependency");
+        workspace.write_package(
+            "cadw",
+            &format!("{FACADE_DEPENDENCY}{}", EXTRA_DEPENDENCY_LINE),
+            FACADE_SOURCE,
+        );
+
+        assert_single_enforced(&workspace, "cadw", DEPENDENCY_RULE, "extra");
+    }
+
+    #[test]
+    fn governance_dependency_on_judged_crate_is_rejected() {
+        let workspace = TempWorkspace::baseline("cadw-governance-governance-dependency");
+        workspace.write_package(
+            "cadw-governance",
+            &format!("{GOVERNANCE_DEPENDENCY}cadw-contract = {{ path = \"../cadw-contract\" }}\n"),
+            "",
+        );
+
+        assert_single_enforced(
+            &workspace,
+            "cadw-governance",
+            DEPENDENCY_RULE,
+            "cadw-contract",
+        );
+    }
+
+    #[test]
+    fn contract_std_io_call_is_rejected() {
+        assert_contract_leak_fires(
+            "cadw-governance-contract-io",
+            "pub fn leak() -> std::io::Stdout {\n    std::io::stdout()\n}\n",
+            "std::io",
+            "std::io::stdout in crate",
+        );
+    }
+
+    #[test]
+    fn contract_std_fs_call_is_rejected() {
+        assert_contract_leak_fires(
+            "cadw-governance-contract-fs",
+            "pub fn leak() -> bool {\n    std::fs::metadata(\"x\").is_ok()\n}\n",
+            "std::fs",
+            "std::fs::metadata in crate",
+        );
+    }
+
+    #[test]
+    fn contract_std_net_call_is_rejected() {
+        assert_contract_leak_fires(
+            "cadw-governance-contract-net",
+            "pub fn leak() -> bool {\n    std::net::TcpStream::connect(\"127.0.0.1:1\").is_ok()\n}\n",
+            "std::net",
+            "std::net::TcpStream::connect in crate",
+        );
+    }
+
+    #[test]
+    fn contract_std_process_call_is_rejected() {
+        assert_contract_leak_fires(
+            "cadw-governance-contract-process",
+            "pub fn leak() -> u32 {\n    std::process::id()\n}\n",
+            "std::process",
+            "std::process::id in crate",
+        );
+    }
+
+    #[test]
+    fn contract_serde_derive_is_rejected() {
+        let workspace = TempWorkspace::baseline("cadw-governance-contract-serde");
+        workspace.write_package(
+            "cadw-contract",
+            "",
+            "#[derive(serde::Serialize)]\npub struct Leak;\n",
+        );
+
+        let violation = assert_single_enforced(
+            &workspace,
+            "crate",
+            "must not acquire trait",
+            "derive serde::Serialize on crate::Leak",
+        );
+        assert_governs_contract(&violation);
+    }
+
+    const DEPENDENCY_RULE: &str = "restrict dependencies to";
+    const INLINE_RULE: &str = "inline symbol path confined to module";
+    const CLEAN_CONTRACT_SOURCE: &str =
+        "pub fn fold(values: &[u32]) -> u32 {\n    values.iter().sum()\n}\n";
+    const FACADE_SOURCE: &str = "pub use cadw_contract::*;\n";
+    const FACADE_DEPENDENCY: &str =
+        "[dependencies]\ncadw-contract = { path = \"../cadw-contract\" }\n";
+    const GOVERNANCE_DEPENDENCY: &str = "[dependencies]\ntianheng = { path = \"../tianheng\" }\n";
+    const EXTRA_DEPENDENCY: &str = "[dependencies]\nextra = { path = \"../extra\" }\n";
+    const EXTRA_DEPENDENCY_LINE: &str = "extra = { path = \"../extra\" }\n";
+
+    fn assert_contract_leak_fires(name: &str, source: &str, prefix: &str, finding: &str) {
+        let workspace = TempWorkspace::baseline(name);
+        workspace.write_package("cadw-contract", "", source);
+
+        let violation = assert_single_enforced(&workspace, prefix, INLINE_RULE, finding);
+        assert_governs_contract(&violation);
+    }
+
+    /// Assert the planted leak produces exactly one violation, enforced and unbaselined, with the
+    /// expected target, rule, and finding; return it for further checks.
+    fn assert_single_enforced(
+        workspace: &TempWorkspace,
+        target: &str,
+        rule: &str,
+        finding: &str,
+    ) -> Violation {
+        let outcome = check_constitution(&constitution(), &workspace.manifest());
+        let Outcome::Violations(report) = outcome else {
+            panic!("expected a `{rule}` violation on `{target}`, got {outcome:?}");
+        };
+        let [violation] = report.violations.as_slice() else {
+            panic!(
+                "expected exactly one violation, got {:?}",
+                report.violations
+            );
+        };
+        assert_eq!(violation.target(), target);
+        assert_eq!(violation.rule, rule);
+        assert_eq!(violation.finding, finding);
+        assert_eq!(violation.severity, Severity::Enforce);
+        assert!(!violation.baselined, "a planted leak must not be baselined");
+        violation.clone()
+    }
+
+    fn assert_governs_contract(violation: &Violation) {
+        assert!(
+            violation
+                .fact()
+                .fields()
+                .any(|(name, value)| name == "governing_package" && value == "cadw-contract"),
+            "expected the violation to come from a cadw-contract boundary: {violation:?}"
+        );
+    }
+
+    struct TempWorkspace {
+        path: PathBuf,
+    }
+
+    impl TempWorkspace {
+        /// The leak-free baseline: the three governed crates in their allowed shape, plus stub
+        /// `tianheng` and `extra` packages so a planted dependency leak adds only one manifest
+        /// line.
+        fn baseline(name: &str) -> Self {
+            let path = env::temp_dir().join(format!("{name}-{}", std::process::id()));
+            if path.exists() {
+                fs::remove_dir_all(&path).expect("stale temporary workspace should be removable");
+            }
+            fs::create_dir_all(&path).expect("temporary workspace should be creatable");
+            let workspace = Self { path };
+            fs::write(
+                workspace.manifest(),
+                "[workspace]\nresolver = \"2\"\nmembers = [\"cadw\", \"cadw-contract\", \"cadw-governance\", \"tianheng\", \"extra\"]\n",
+            )
+            .expect("workspace manifest should be writable");
+            workspace.write_package("cadw-contract", "", CLEAN_CONTRACT_SOURCE);
+            workspace.write_package("cadw", FACADE_DEPENDENCY, FACADE_SOURCE);
+            workspace.write_package("cadw-governance", GOVERNANCE_DEPENDENCY, "");
+            workspace.write_package("tianheng", "", "");
+            workspace.write_package("extra", "", "");
+            workspace
+        }
+
+        fn manifest(&self) -> PathBuf {
+            self.path.join("Cargo.toml")
+        }
+
+        fn write_package(&self, name: &str, dependencies: &str, source: &str) {
+            let package = self.path.join(name);
+            fs::create_dir_all(package.join("src")).expect("package source dir should be writable");
+            fs::write(
+                package.join("Cargo.toml"),
+                format!(
+                    "[package]\nname = \"{name}\"\nversion = \"0.1.0\"\nedition = \"2024\"\n{dependencies}"
+                ),
+            )
+            .expect("package manifest should be writable");
+            fs::write(package.join("src/lib.rs"), source)
+                .expect("package source should be writable");
+        }
+    }
+
+    impl Drop for TempWorkspace {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.path);
+        }
+    }
+
     #[test]
     fn clean_prose_passes() {
         let content = "# Cadw\n\nA sans-I/O kernel for folding batches of moves.\n";

@@ -149,6 +149,7 @@ When comparing possible changes, prefer the one that protects the Core Contract 
 
 ## References
 
+- `AGENTS.cadw-law.md` — the generated projection of the accepted constitution.
 - `docs/domain-language.md` — the canonical vocabulary (Target, State, Move, Validator, Rejection,
   Ledger).
 - `BACKLOG.md` — the origin, every settled decision and its reason, and deferred work.
