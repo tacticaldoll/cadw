@@ -6,7 +6,7 @@ retention — a target no move mentions is unreachable by that fold, not merely 
 a checked rule.
 
 Domain validation is a fully structured port (`Validator::Rejection: std::error::Error`),
-mirroring `pacta-contract::Registry`'s `type Error` associated-type pattern.
+following an associated `type Error` pattern.
 
 Zero non-dev dependencies, enforced by `cadw-governance`. See the workspace root `PROJECT.md`
 for the full Core Contract and Non-Goals.

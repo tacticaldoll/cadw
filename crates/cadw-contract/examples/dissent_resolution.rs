@@ -1,15 +1,15 @@
-//! A non-toy consumer example: models `ringi`'s actual `Resolution` shape (`reason: String`,
+//! A non-toy consumer example: models a real consumer's `Resolution` shape (`reason: String`,
 //! `provenance: Vec<EventRef>` — substituted here with `Vec<String>`, since the id
 //! *representation* is not what this example tests) as a [`Validator`] implementation, proving
 //! the port composes with a realistic, multi-field domain outcome and a closed rejection enum —
 //! not just the vacuum test suite's trivial `String` outcome and single-check validator.
 //!
-//! Does not depend on `ringi`. Run with:
+//! Does not depend on that consumer. Run with:
 //! `cargo run --example dissent_resolution -p cadw-contract`.
 
 use cadw_contract::{Ledger, Move, TargetId, Validator};
 
-/// Mirrors `ringi::revision::Resolution`'s shape: both fields are required non-empty before a
+/// Mirrors the consumer's `Resolution` shape: both fields are required non-empty before a
 /// dissent may close.
 #[derive(Debug, Clone, PartialEq)]
 struct Resolution {

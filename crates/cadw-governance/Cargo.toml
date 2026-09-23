@@ -6,7 +6,7 @@ license.workspace = true
 repository.workspace = true
 readme = "README.md"
 description = "Executable architectural governance for the Cadw workspace (tianheng constitution)."
-publish.workspace = true
+publish = false
 
 [dependencies]
 tianheng.workspace = true

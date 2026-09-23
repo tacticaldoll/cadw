@@ -5,8 +5,8 @@
 //!
 //! The kernel owns the fold/atomicity/conflict/state-transition mechanism. It never judges
 //! whether a specific `Outcome` is semantically valid — that is the domain-supplied [`Validator`]
-//! port, whose [`Validator::Rejection`] is a fully structured `std::error::Error`, mirroring
-//! `pacta-contract::Registry`'s `type Error` associated-type pattern.
+//! port, whose [`Validator::Rejection`] is a fully structured `std::error::Error`, following
+//! an associated `type Error` pattern.
 //!
 //! Most consumers should depend on the [`cadw`](https://crates.io/crates/cadw) facade instead;
 //! depend on `cadw-contract` directly only to implement a `Validator` without the facade's
