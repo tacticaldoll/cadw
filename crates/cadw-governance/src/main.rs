@@ -10,11 +10,11 @@ use std::{
 
 use tianheng::prelude::*;
 
-const CONTRACT_REASON: &str = "cadw-contract is the isolated core contract: a sans-I/O kernel with no time/lease/crash-recovery dimension. It needs no dependency at all, so it may depend on nothing.";
-const FACADE_REASON: &str = "cadw is the curated public entrypoint: a pure re-export facade with no logic of its own. It must depend on cadw-contract only, never acquiring a dependency the core itself does not have.";
-const GOVERNANCE_REASON: &str = "the governance gate must stay independent of the workspace graph it judges: it may depend only on tianheng, never on cadw-contract or any other workspace crate under judgment.";
-const CORE_NO_IO_REASON: &str = "the sans-I/O core contract performs no I/O: no code in cadw-contract may call into std::io/fs/net/process; a batch fold is a synchronous, in-memory operation, never a place I/O could hide.";
-const NO_SERDE_REASON: &str = "cadw-contract is transient in-memory mechanism, not a durable record type: it must not acquire Serialize/Deserialize anywhere. Serialization of a domain's Outcome is that domain's own concern, never this crate's.";
+const CONTRACT_REASON: &str = "cadw-contract is the isolated core contract: a sans-I/O kernel with no time/lease/crash-recovery dimension needs no dependency at all, so its normal dependencies are none.";
+const FACADE_REASON: &str = "cadw is the curated public entrypoint, a re-export facade over cadw-contract: its normal dependencies are cadw-contract alone, never one the core itself does not have. That the facade carries no logic of its own is held by review, not by this dependency boundary.";
+const GOVERNANCE_REASON: &str = "the governance gate must stay independent of the workspace graph it judges: its normal dependencies are tianheng alone, never cadw-contract or any other workspace crate under judgment.";
+const CORE_NO_IO_REASON: &str = "the sans-I/O core contract performs no I/O: cadw-contract's library source makes no inline call into std::io/fs/net/process; a batch fold is a synchronous, in-memory operation. Coverage is partial by nature (macro-expanded I/O such as println!, a method called on an I/O value, and a path taken as a value are invisible to a source scan, and the crate's examples, tests, and build script lie outside it), so this tooth complements review rather than replacing it.";
+const NO_SERDE_REASON: &str = "cadw-contract is transient in-memory mechanism, not a durable record type: its library source must not acquire Serialize/Deserialize, by derive or by impl. Serialization of a domain's Outcome is that domain's own concern, never this crate's. Coverage is partial by nature (an impl generated inside a macro is invisible to a source scan, and the crate's examples and tests lie outside it), so this tooth complements review rather than replacing it.";
 
 // CHANGELOG.md is deliberately absent: its released version entries legitimately narrate the
 // discarded working names ("Motion", "motion-contract") as history of the rename itself, so
