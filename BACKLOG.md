@@ -110,12 +110,16 @@ which that question gets reopened.
   test exercising it; `cargo test -p cadw-governance` alone could not have caught a mistake in
   either, only CI's separate `check` invocation could. Added both.
 - **Not adopted: a sibling's generated `law_projection_is_fresh` / `AGENTS.*-law.md` mechanism.**
-  `cadw`'s Constitution declares 3 boundaries total; that sibling's declares roughly a dozen across
-  three dependency-kind variants per crate plus a semantic async-exposure reaction. Reading
+  `cadw`'s Constitution declares 8 boundaries (three crate dependency restrictions, four no-I/O
+  confinements, and one no-serde marker); that sibling's declares roughly a dozen across three
+  dependency-kind variants per crate plus a semantic async-exposure reaction. Reading
   `constitution()` directly is still the fastest way to audit cadw's boundaries — a generated
   projection earns its keep once that stops being true, the same "not before it's needed"
   reasoning already applied to deferring a `cadw-conformance` crate below. Revisit if/when the
-  boundary count grows enough to change that.
+  boundary count grows enough to change that. **Superseded:** the family governance now projects
+  every repository's accepted law to a root `AGENTS.<name>-law.md`, byte-checked by a
+  `law_projection_is_fresh` test, so `AGENTS.cadw-law.md` exists for uniformity across the family
+  rather than because the boundary count grew.
 - **`docs/adr/` is dissolved; this repository does not keep a standalone ADR practice.**
   `PROJECT.md`'s own Lineage cites the reference implementation this repository's shape was observed
   from — and that implementation has no `docs/adr/` at all, recording every settled/deferred
