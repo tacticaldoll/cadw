@@ -8,8 +8,8 @@ a checked rule.
 Domain validation is a fully structured port (`Validator::Rejection: std::error::Error`),
 following an associated `type Error` pattern.
 
-Zero non-dev dependencies, enforced by `cadw-governance`. See the workspace root `PROJECT.md`
-for the full Core Contract and Non-Goals.
+Zero non-dev dependencies; `cadw-governance` enforces that it declares no normal dependency. See
+the workspace root `PROJECT.md` for the full Core Contract and Non-Goals.
 
 Part of [Cadw](https://github.com/tacticaldoll/cadw) — see `PROJECT.md`'s `## Status` for the
 current tier.
