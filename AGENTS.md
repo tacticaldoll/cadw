@@ -268,7 +268,7 @@ The `dissent_resolution` command executes `cadw-contract`'s non-toy consumer exa
 `cargo build`/`cargo test` alone only compile it, never run its assertions.
 
 The `cadw-governance` line is the executable architectural governance gate (Tianheng). It enforces
-`PROJECT.md`'s Core Contract boundaries — do not treat it as optional or as a slower duplicate of
-clippy. `cargo deny check` enforces `deny.toml`'s license/advisory/bans/sources policy over the
-resolved dependency graph. CI (`.github/workflows/ci.yml`) runs all of this on every push and pull
-request.
+the observable part of `PROJECT.md`'s Core Contract boundaries, as `AGENTS.cadw-law.md` states; the
+rest is held by review — do not treat it as optional or as a slower duplicate of clippy.
+`cargo deny check` enforces `deny.toml`'s license/advisory/bans/sources policy over the resolved
+dependency graph. CI (`.github/workflows/ci.yml`) runs all of this on every push and pull request.

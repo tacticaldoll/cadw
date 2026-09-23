@@ -88,8 +88,9 @@ The behavior that must be protected at all costs:
   consumer has durably claimed through its own mechanism (for example a separate claim library,
   composed outside this crate). Cadw does not compete with such a library's scope — it has none
   of its reasons to exist.
-- **Governance with teeth.** `cadw-governance` (tianheng) enforces the boundaries this document
-  claims, executably — see `crates/cadw-governance/README.md`.
+- **Governance with teeth.** `cadw-governance` (tianheng) enforces the observable part of the
+  boundaries this document claims, executably; the rest is held by review — see
+  `crates/cadw-governance/README.md`.
 
 ## Non-Goals
 
