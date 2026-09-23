@@ -19,7 +19,13 @@ const NO_SERDE_REASON: &str = "cadw-contract is transient in-memory mechanism, n
 // CHANGELOG.md is deliberately absent: its released version entries legitimately narrate the
 // discarded working names ("Motion", "motion-contract") as history of the rename itself, so
 // governing it here would fail the gate on the project's own release history.
-const ACTIVE_PROSE_FILES: &[&str] = &["AGENTS.md", "PROJECT.md", "README.md", "BACKLOG.md"];
+const ACTIVE_PROSE_FILES: &[&str] = &[
+    "AGENTS.md",
+    "PROJECT.md",
+    "README.md",
+    "BACKLOG.md",
+    "docs/domain-language.md",
+];
 
 const STALE_PHRASES: &[StalePhrase] = &[
     StalePhrase {
@@ -469,6 +475,44 @@ Regenerate it with `BLESS=1 cargo test -p cadw-governance law_projection_is_fres
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
 
         assert_eq!(check_active_prose(&root), Ok(()));
+    }
+
+    #[test]
+    fn a_stale_working_name_in_domain_language_is_caught() {
+        // Every governed file is present and clean except the canonical vocabulary, so the one
+        // violation can only come from scanning `docs/domain-language.md`.
+        let root = env::temp_dir().join(format!(
+            "cadw-governance-domain-language-{}",
+            std::process::id()
+        ));
+        if root.exists() {
+            fs::remove_dir_all(&root).expect("stale temporary directory should be removable");
+        }
+        fs::create_dir_all(root.join("docs")).expect("temporary directory should be creatable");
+        for relative in ACTIVE_PROSE_FILES {
+            fs::write(root.join(relative), "# Cadw\n").expect("governed file should be writable");
+        }
+        fs::write(
+            root.join("docs/domain-language.md"),
+            "# Domain Language\n\n- **Motion**: a stale term.\n",
+        )
+        .expect("vocabulary file should be writable");
+
+        let result = check_active_prose(&root);
+        fs::remove_dir_all(&root).expect("temporary directory should be removable");
+
+        let Err(violations) = result else {
+            panic!("a discarded working name in docs/domain-language.md must fail the gate");
+        };
+        assert_eq!(
+            violations,
+            vec![ProseViolation {
+                path: String::from("docs/domain-language.md"),
+                line: 3,
+                phrase: "Motion",
+                reason: STALE_PHRASES[1].reason,
+            }]
+        );
     }
 
     #[test]

@@ -86,14 +86,17 @@ which that question gets reopened.
   by deleting and rebuilding the repository, rather than retrofitting history — see this
   repository's actual `git log` for the clean result.)
 - **`architectural-governance/spec.md`'s active-prose Requirement understated what the gate
-  checks.** `cadw-governance/src/main.rs`'s `ACTIVE_PROSE_FILES` has always covered four files
+  checks.** `cadw-governance/src/main.rs`'s `ACTIVE_PROSE_FILES` then covered four files
   (`AGENTS.md`, `PROJECT.md`, `README.md`, `BACKLOG.md`); the spec's Requirement text named only
   the first three. Corrected the spec to name all four — the code's behavior was already right,
-  the spec simply never caught up to it.
-- **Deferred: `docs/domain-language.md` is not yet under the active-prose gate.** The Terminology
-  list moved there from `PROJECT.md` when the repository took the family skeleton, so the
-  discarded-working-name check no longer scans it. Extending the gate is a requirement change and
-  belongs in its own OpenSpec change to `architectural-governance`.
+  the spec simply never caught up to it. It now covers five: see the `docs/domain-language.md`
+  entry below.
+- **Done: `docs/domain-language.md` is under the active-prose gate.** The Terminology list moved
+  there from `PROJECT.md` when the repository took the family skeleton, which took it out of the
+  discarded-working-name check. The OpenSpec change `scan-domain-language` to
+  `architectural-governance` added it to `ACTIVE_PROSE_FILES`. It gets the same line scan and missing-file failure as the four root
+  files. No other `docs/` file is scanned: only the one that took over `PROJECT.md`'s vocabulary
+  inherits its governance.
 - **`CHANGELOG.md` is deliberately excluded from the active-prose stale-phrase gate.** Its
   `[0.1.0]` entry legitimately narrates the discarded working names this repository grew out of
   (see `cadw-governance/src/main.rs`'s `STALE_PHRASES` for the literal phrases — deliberately not
