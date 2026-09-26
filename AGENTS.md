@@ -260,6 +260,7 @@ cargo deny check
 cargo run -p cadw-governance -- check --manifest-path Cargo.toml
 cargo run --example dissent_resolution -p cadw-contract
 ./scripts/changelog-guard.sh
+npx -y @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
 cargo +1.88 build --workspace
 ```
 
