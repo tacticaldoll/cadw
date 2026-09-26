@@ -12,5 +12,5 @@ keywords = ["batch-fold", "atomicity", "sans-io", "ledger", "state-machine"]
 categories = ["rust-patterns"]
 
 [workspace.dependencies]
-tianheng = "0.6.1"
+tianheng = "0.7.0"
 cadw-contract = { path = "crates/cadw-contract", version = "0.1.0" }
